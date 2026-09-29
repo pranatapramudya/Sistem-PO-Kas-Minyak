@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { resetPIN, createSessionToken, COOKIE_NAME, DEFAULT_TENANT_ID } from "@/lib/auth";
+import { resetPIN, createSessionToken, COOKIE_NAME, DEFAULT_TENANT_ID, findTenantByIdentifier } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
     const recoveryKey = typeof body.recoveryKey === "string" ? body.recoveryKey.trim() : "";
     const newPin = typeof body.newPin === "string" ? body.newPin.trim() : "";
+
+    const identifier = typeof body.identifier === "string" ? body.identifier.trim() : undefined;
 
     if (!recoveryKey) {
       return NextResponse.json(
@@ -21,7 +23,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const success = await resetPIN(recoveryKey, newPin);
+    const success = await resetPIN(recoveryKey, newPin, identifier);
     if (!success) {
       return NextResponse.json(
         { error: "Kode pemulihan salah. Silakan coba lagi." },
@@ -30,7 +32,15 @@ export async function POST(req: NextRequest) {
     }
 
     // Auto login with new PIN
-    const token = await createSessionToken(DEFAULT_TENANT_ID, 90);
+    let targetTenantId = DEFAULT_TENANT_ID;
+    if (identifier) {
+      const tenant = await findTenantByIdentifier(identifier);
+      if (tenant) {
+        targetTenantId = tenant.id;
+      }
+    }
+
+    const token = await createSessionToken(targetTenantId, 90);
     const res = NextResponse.json({
       success: true,
       message: "PIN berhasil diperbarui.",

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, Delete, ShieldCheck, AlertCircle, KeyRound, ArrowLeft, CheckCircle2, Building, UserPlus, LogIn, BookOpen } from "lucide-react";
+import { Lock, Delete, AlertCircle, KeyRound, ArrowLeft, CheckCircle2, Building, UserPlus, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -170,6 +170,57 @@ export default function LoginPage() {
     }
   };
 
+  // Submit Reset PIN
+  const handleResetSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetIdentifier.trim()) {
+      setError("Username / No. HP toko wajib diisi.");
+      return;
+    }
+    if (!recoveryKey.trim()) {
+      setError("Kode pemulihan (master key) wajib diisi.");
+      return;
+    }
+    if (newPin.length !== 6 || !/^\d{6}$/.test(newPin)) {
+      setError("PIN baru harus berupa 6 digit angka.");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/auth/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          identifier: resetIdentifier.trim(),
+          recoveryKey: recoveryKey.trim(),
+          newPin: newPin.trim(),
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || "Gagal mengatur ulang PIN. Periksa kode pemulihan Anda.");
+      }
+
+      try {
+        localStorage.setItem("last_identifier", resetIdentifier.trim());
+      } catch {}
+
+      setSuccessMsg("PIN berhasil diperbarui! Mengalihkan ke dashboard...");
+      setTimeout(() => {
+        router.replace("/");
+        router.refresh();
+      }, 700);
+    } catch (err: any) {
+      setError(err.message || "Gagal mengatur ulang PIN.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Physical keyboard support for numeric input
   useEffect(() => {
     if (mode !== "LOGIN") return;
@@ -215,7 +266,7 @@ export default function LoginPage() {
         </div>
 
         {/* Mode Switcher Tabs */}
-        <div className="grid grid-cols-2 p-1 bg-slate-200/70 rounded-xl w-full text-xs font-bold gap-1 mt-2">
+        {mode === "RESET" ? (
           <button
             type="button"
             onClick={() => {
@@ -224,30 +275,45 @@ export default function LoginPage() {
               setPin("");
               setMode("LOGIN");
             }}
-            className={`py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
-              mode === "LOGIN"
-                ? "bg-white text-slate-900 shadow-xs"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
+            className="w-full py-2 px-3 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-2xs hover:bg-slate-50 cursor-pointer mt-2"
           >
-            <LogIn className="w-3.5 h-3.5" /> Masuk
+            <ArrowLeft className="w-3.5 h-3.5 text-slate-600" /> Kembali ke Pilihan Masuk / Daftar
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              setError(null);
-              setSuccessMsg(null);
-              setMode("REGISTER");
-            }}
-            className={`py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
-              mode === "REGISTER"
-                ? "bg-white text-emerald-700 shadow-xs"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
-          >
-            <UserPlus className="w-3.5 h-3.5" /> Daftar Baru
-          </button>
-        </div>
+        ) : (
+          <div className="grid grid-cols-2 p-1 bg-slate-200/70 rounded-xl w-full text-xs font-bold gap-1 mt-2">
+            <button
+              type="button"
+              onClick={() => {
+                setError(null);
+                setSuccessMsg(null);
+                setPin("");
+                setMode("LOGIN");
+              }}
+              className={`py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                mode === "LOGIN"
+                  ? "bg-white text-slate-900 shadow-xs"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <LogIn className="w-3.5 h-3.5" /> Masuk
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setError(null);
+                setSuccessMsg(null);
+                setMode("REGISTER");
+              }}
+              className={`py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                mode === "REGISTER"
+                  ? "bg-white text-emerald-700 shadow-xs"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <UserPlus className="w-3.5 h-3.5" /> Daftar Baru
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Mode: REGISTER */}
@@ -369,6 +435,109 @@ export default function LoginPage() {
             >
               <LogIn className="w-3.5 h-3.5 text-slate-600" />
               Sudah punya akun toko? Masuk ke Akun Anda
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Mode: RESET */}
+      {mode === "RESET" && (
+        <div className="w-full max-w-sm bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4 my-auto">
+          {/* Helper Guidance Callout */}
+          <div className="bg-amber-50/80 border border-amber-200/80 rounded-xl p-3 text-left space-y-1">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-amber-900">
+              <KeyRound className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+              <span>Pemulihan PIN Akun Toko:</span>
+            </div>
+            <p className="text-[11px] text-amber-800 leading-relaxed">
+              Masukkan Username/No. HP toko Anda, kode pemulihan (default: <code className="font-bold bg-amber-100/90 px-1 py-0.5 rounded text-amber-950">sim2026</code>), dan buat 6 angka PIN baru.
+            </p>
+          </div>
+
+          <div className="border-b pb-2.5">
+            <h2 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+              <KeyRound className="w-4 h-4 text-amber-600" /> Atur Ulang PIN (Reset PIN)
+            </h2>
+            <p className="text-[11px] text-slate-500 mt-0.5">
+              Akses akun toko Anda akan segera dipulihkan setelah PIN diperbarui.
+            </p>
+          </div>
+
+          <form onSubmit={handleResetSubmit} className="space-y-3">
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-700">Akun / Username / No. HP Toko *</label>
+              <Input
+                placeholder="Contoh: 08123456789 atau admin"
+                value={resetIdentifier}
+                onChange={(e) => setResetIdentifier(e.target.value.toLowerCase().replace(/\s+/g, ""))}
+                className="h-10 text-xs sm:text-sm font-mono font-medium"
+                required
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-700">Kode Pemulihan (Master Key) *</label>
+              <Input
+                type="text"
+                placeholder="Default: sim2026"
+                value={recoveryKey}
+                onChange={(e) => setRecoveryKey(e.target.value)}
+                className="h-10 text-xs sm:text-sm font-mono"
+                required
+              />
+              <p className="text-[10px] text-slate-400">Kode standar master bawaan: <code className="font-mono text-slate-700 font-bold bg-slate-100 px-1 rounded">sim2026</code></p>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-700">Buat PIN Baru (6 Digit Angka) *</label>
+              <Input
+                type="password"
+                maxLength={6}
+                placeholder="Contoh: 123456"
+                value={newPin}
+                onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ""))}
+                className="h-10 text-xs sm:text-sm font-mono tracking-widest text-center font-bold"
+                required
+              />
+            </div>
+
+            {error && (
+              <p className="text-xs text-rose-600 font-semibold flex items-center gap-1">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                {error}
+              </p>
+            )}
+
+            {successMsg && (
+              <p className="text-xs text-emerald-600 font-semibold flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                {successMsg}
+              </p>
+            )}
+
+            <Button
+              type="submit"
+              disabled={loading || newPin.length !== 6 || !recoveryKey.trim()}
+              className="w-full h-11 font-bold bg-amber-600 hover:bg-amber-700 text-white shadow-xs mt-2"
+            >
+              {loading ? "Menyimpan PIN Baru..." : "Simpan PIN & Masuk"}
+            </Button>
+          </form>
+
+          {/* Back to Login */}
+          <div className="pt-2 border-t border-slate-100 text-center">
+            <button
+              type="button"
+              onClick={() => {
+                setError(null);
+                setSuccessMsg(null);
+                setPin("");
+                setMode("LOGIN");
+              }}
+              className="w-full py-2.5 px-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 text-slate-600" />
+              Kembali ke Halaman Masuk
             </button>
           </div>
         </div>
@@ -525,7 +694,7 @@ export default function LoginPage() {
           </button>
 
           {/* Remember me & Action Links */}
-          <div className="flex flex-col items-center gap-1.5 pt-1 w-full text-xs">
+          <div className="flex flex-col items-center gap-2 pt-1 w-full text-xs">
             <label className="flex items-center gap-2 text-slate-600 cursor-pointer select-none">
               <input
                 type="checkbox"
@@ -535,23 +704,32 @@ export default function LoginPage() {
               />
               <span>Ingat perangkat ini (30 Hari)</span>
             </label>
+
+            {/* Tombol Lupa PIN */}
+            <button
+              type="button"
+              onClick={() => {
+                setError(null);
+                setSuccessMsg(null);
+                setResetIdentifier(identifier.trim() || "admin");
+                setRecoveryKey("");
+                setNewPin("");
+                setMode("RESET");
+              }}
+              className="text-xs text-amber-700 hover:text-amber-800 font-bold hover:underline inline-flex items-center gap-1.5 py-1 cursor-pointer transition-colors"
+            >
+              <KeyRound className="w-3.5 h-3.5 text-amber-600" />
+              Lupa PIN? Reset di sini
+            </button>
           </div>
         </div>
       )}
 
-      {/* Footer Info & Panduan Link */}
-      <div className="pb-3 text-center space-y-1.5">
+      {/* Footer Info */}
+      <div className="pb-3 text-center space-y-1">
         <p className="text-xs text-slate-400 font-medium">
           🔒 Multi-Tenant Aman &bull; Data tiap usaha terpisah 100%
         </p>
-        <div>
-          <a
-            href="/panduan"
-            className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline hover:text-blue-800"
-          >
-            <BookOpen className="w-3.5 h-3.5" /> Buku Panduan Cara Pakai Aplikasi
-          </a>
-        </div>
       </div>
     </div>
   );
