@@ -240,7 +240,9 @@ export default async function POPrintPage({ params }: POPrintPageProps) {
               </div>
               <div>
                 <div className="w-48 mx-auto border-b border-slate-900"></div>
-                <p className="text-[11px] text-slate-500 mt-1">Pimpinan / Penanggung Jawab</p>
+                <p className="text-[11px] text-slate-700 font-medium mt-1">
+                  {po.tenant?.ownerName ? `${po.tenant.ownerName} (Pimpinan)` : "Pimpinan / Penanggung Jawab"}
+                </p>
               </div>
             </div>
           </div>
