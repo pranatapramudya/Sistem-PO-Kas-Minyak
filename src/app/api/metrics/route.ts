@@ -1,11 +1,15 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getTenantIdFromRequest } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const tenantId = await getTenantIdFromRequest(request);
+
     const pos = await prisma.purchaseOrder.findMany({
+      where: { tenantId },
       include: { cashInflow: true },
     });
 
@@ -15,7 +19,7 @@ export async function GET() {
     const outstandingPOs = pos.filter((p) => p.status !== "CLOSED");
     const totalOutstandingModal = outstandingPOs.reduce((sum, p) => sum + p.totalCost, 0);
     const totalOutstandingReceivables = outstandingPOs.reduce(
-      (sum, p) => sum + p.totalCost - p.cashInflow.reduce((s, c) => s + c.amount, 0),
+      (sum, p) => sum + Math.max(0, p.totalCost - p.cashInflow.reduce((s, c) => s + c.amount, 0)),
       0
     );
     const closedPOs = pos.filter((p) => p.status === "CLOSED");
@@ -25,7 +29,7 @@ export async function GET() {
     const closedPOCount = closedPOs.length;
 
     return NextResponse.json({
-      activeCapital: 80_000_000 - totalOutstandingModal,
+      activeCapital: totalOutstandingModal,
       outstandingReceivables: totalOutstandingReceivables,
       monthlyProfit,
       closedPOCount,

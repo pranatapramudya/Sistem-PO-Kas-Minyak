@@ -39,9 +39,15 @@ interface DashboardClientProps {
     monthlyProfit: number;
     closedPOCount: number;
   };
+  tenant?: {
+    id: string;
+    companyName: string;
+    ownerName?: string | null;
+    identifier: string;
+  } | null;
 }
 
-export function DashboardClient({ initialData, initialMetrics }: DashboardClientProps) {
+export function DashboardClient({ initialData, initialMetrics, tenant }: DashboardClientProps) {
   const { success: toastSuccess, error: toastError } = useToast();
   const [data, setData] = useState<POTableData[]>(initialData);
   const [metrics, setMetrics] = useState(initialMetrics);
@@ -318,7 +324,7 @@ export function DashboardClient({ initialData, initialMetrics }: DashboardClient
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-lg sm:text-2xl font-black tracking-tight text-slate-900 leading-tight">
-              Sistem PO &amp; Kas Minyak
+              {tenant?.companyName || "Sistem PO & Kas Minyak"}
             </h1>
             <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 font-bold border border-emerald-200 shrink-0">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -326,7 +332,7 @@ export function DashboardClient({ initialData, initialMetrics }: DashboardClient
             </span>
           </div>
           <p className="text-xs sm:text-sm text-slate-600 font-medium mt-0.5 truncate">
-            CV. TRADING MINYAK &bull; Pembukuan PO &amp; Kas
+            {tenant ? `${tenant.companyName} • Akun: ${tenant.identifier}` : "CV. TRADING MINYAK • Pembukuan PO & Kas"}
           </p>
         </div>
 

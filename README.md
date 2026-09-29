@@ -1,40 +1,45 @@
-# 🛢️ Sistem PO & Kas Minyak
+# 🛢️ Sistem PO & Kas Minyak (Multi-Tenant SaaS)
 
-Aplikasi manajemen **Purchase Order (PO)**, pembukuan **Kas Masuk**, monitoring **Piutang Berjalan**, dan perhitungan **Laba Bersih** berbasis web modern dan Progressive Web App (PWA) untuk bisnis distribusi & trading minyak.
+Aplikasi manajemen **Purchase Order (PO)**, pembukuan **Kas Masuk**, monitoring **Piutang Berjalan**, dan perhitungan **Laba Bersih** berbasis web modern dan Progressive Web App (PWA) dengan arsitektur **Multi-Tenant (Multi-Usaha)** untuk bisnis distribusi & trading minyak.
 
 ---
 
 ## 🌟 Fitur Utama
 
-1. **Dashboard Eksekutif & Metrik Real-Time**
+1. **Multi-Tenant / Multi-Usaha (Terisolasi 100%)**
+   * **Daftar Toko Baru Langsung:** Siapa pun (rekanan, keluarga, cabang lain) dapat mendaftarkan usaha baru langsung dari halaman login.
+   * **Data Terisolasi:** Setiap usaha/toko memiliki ruang data sendiri. Toko B **tidak akan pernah bisa melihat** data PO, kas masuk, supplier, maupun modal milik Toko A.
+   * **Kop Surat Dinamis:** Dokumen cetak surat pesanan resmi A4 otomatis menggunakan identitas, logo nama, alamat, nomor telepon/WA, dan NPWP milik masing-masing usaha yang sedang login.
+
+2. **Dashboard Eksekutif & Metrik Real-Time**
    * **Sisa Modal Aktif:** Monitoring modal berjalan yang belum kembali.
    * **Piutang Berjalan:** Total tagihan ke pembeli/pelanggan yang belum lunas.
    * **Laba Bulan Ini:** Akumulasi keuntungan bersih (Kas Masuk - Modal PO).
    * **PO Selesai:** Total transaksi yang telah 100% lunas.
 
-2. **Manajemen PO & Pembukuan Kas Masuk**
+3. **Manajemen PO & Pembukuan Kas Masuk**
    * Pencatatan PO ke supplier dengan multi-item barang, kuantitas, satuan, dan harga beli.
-   * Pencatatan pelunasan kas masuk bertahap (cicilan/parsial) dengan bukti pembayaran.
-   * Perhitungan otomatis status transaksi:
+   * Pencatatan pelunasan kas masuk bertahap (cicilan/parsial) dengan bukti transfer.
+   * 3 Klasifikasi Status Transaksi:
      * 🟡 **Pending (Belum Bayar):** Modal keluar, belum ada kas masuk (Kas = Rp 0).
      * 🟠 **Partial (Dicicil):** Pembayaran telah dicicil sebagian, masih ada sisa piutang modal.
      * 🟢 **Lunas (Selesai):** Pembayaran diterima penuh 100% atau lebih dari modal PO.
 
-3. **Cetak Surat Pesanan (PO) Standar Resmi A4**
-   * Pratinjau dan pencetakan dokumen resmi A4 dengan kop surat perusahaan, rincian barang 6-kolom, kalimat terbilang rupiah otomatis, dan kolom tanda tangan dua pihak.
-   * Dioptimalkan untuk tampilan desktop maupun mobile (tata letak presisi tidak rusak/runtuh saat diakses dari HP).
+4. **Cetak Surat Pesanan (PO) Standar Resmi A4**
+   * Format cetak resmi dokumen A4 dengan kop surat nama toko dinamis, rincian barang 6-kolom, kalimat terbilang rupiah otomatis, dan kolom tanda tangan dua pihak.
+   * Tampilan mobile responsif berskala A4 asli (`overflow-x-auto`) sehingga tata letak dokumen fisik tidak runtuh atau rusak saat dibuka dari HP.
 
-4. **Keamanan Akses Private (PIN 6-Digit)**
-   * Sistem autentikasi private dengan keypad angka responsif 0-latency.
-   * Alur pembuatan PIN pertama kali (*Setup PIN*) otomatis saat pertama kali dibuka.
+5. **Keamanan Akses Private (PIN 6-Digit & Keypad 0-Latency)**
+   * Login cepat menggunakan Username / No. HP + Keypad PIN angka 6-digit.
    * Mekanisme *Lupa PIN / Reset PIN* dengan Master Recovery Key (`sim2026`).
 
-5. **PWA (Progressive Web App) & Mobile First**
-   * Tombol menu navigasi bawah modern (*Bottom Navigation Bar*) untuk pengalaman seperti aplikasi native.
+6. **PWA (Progressive Web App) & Mobile First**
+   * Menu navigasi bawah modern (*Bottom Navigation Bar*) untuk kenyamanan penggunaan di smartphone.
+   * Tombol shortcut *Refresh* data 0-latency dengan sinkronisasi instan ke Neon PostgreSQL.
    * Banner instalasi cepat (*Add to Home Screen*) di perangkat Android/Chrome/iOS.
 
-6. **Export Laporan Excel**
-   * Sekali klik untuk mengunduh seluruh rekapitulasi data PO dan kas ke format spreadsheet `.xlsx`.
+7. **Export Laporan Excel Per-Tenant**
+   * Mengunduh rekapitulasi data PO dan kas milik usaha yang login ke format spreadsheet `.xlsx`.
 
 ---
 
@@ -67,7 +72,7 @@ Salin file `.env.example` menjadi `.env`:
 ```bash
 cp .env.example .env
 ```
-Sesuaikan isi `.env` dengan kredensial database Anda:
+Sesuaikan isi `.env`:
 ```env
 DATABASE_URL="postgresql://username:password@ep-sample-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
 APP_NAME="CV. TRADING MINYAK"
@@ -77,15 +82,15 @@ NPWP="00.000.000.0-000.000"
 AUTH_SECRET="sim-trading-private-secret-salt-2026-secure"
 ```
 
-### 4. Sinkronisasi Database
-Jalankan migrasi Prisma schema ke PostgreSQL:
+### 4. Sinkronisasi Database & Migrasi Data
+Jalankan sinkronisasi skema Prisma ke database Neon:
 ```bash
 npx prisma db push
 ```
 
-*(Opsional)* Jalankan seeder contoh data transaksi minyak:
+Jalankan script inisialisasi default tenant:
 ```bash
-npx ts-node scripts/seed.ts
+node scripts/migrate-to-multitenant.js
 ```
 
 ### 5. Jalankan Server Development
@@ -96,12 +101,14 @@ Buka browser di [http://localhost:3000](http://localhost:3000).
 
 ---
 
-## 🔐 Informasi Akses Awal
-* Saat pertama kali aplikasi dibuka, pengguna akan diminta membuat **PIN 6-digit baru** untuk mengamankan data.
-* Jika lupa PIN, gunakan menu **Lupa PIN** dengan kode pemulihan master:
-  ```text
-  sim2026
-  ```
+## 🔐 Alur Login & Daftar Usaha Baru
+* **Akun Default Bawaan:**
+  * **Username:** `admin` (atau kosongkan untuk akun utama CV. TRADING MINYAK)
+  * **PIN:** PIN 6-digit rahasia Anda.
+* **Mendaftarkan Toko / Pengguna Baru:**
+  * Di halaman login, klik tab **"Daftar Baru"**.
+  * Masukkan Nama Usaha, Username/No. WhatsApp, dan tentukan PIN 6-digit baru.
+  * Akun baru langsung aktif dengan data dashboard yang **100% kosong dan terpisah**.
 
 ---
 

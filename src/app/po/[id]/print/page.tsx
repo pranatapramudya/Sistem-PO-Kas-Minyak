@@ -17,6 +17,7 @@ export default async function POPrintPage({ params }: POPrintPageProps) {
     include: {
       items: true,
       cashInflow: true,
+      tenant: true,
     },
   });
 
@@ -29,10 +30,10 @@ export default async function POPrintPage({ params }: POPrintPageProps) {
     );
   }
 
-  const appName = process.env.APP_NAME || "CV. TRADING MINYAK";
-  const appAddress = process.env.APP_ADDRESS || "Jl. Raya Utama No. 123, Jakarta Selatan";
-  const appPhone = process.env.APP_PHONE || "0812-3456-7890";
-  const npwp = process.env.NPWP || "00.000.000.0-000.000";
+  const appName = po.tenant?.companyName || process.env.APP_NAME || "CV. TRADING MINYAK";
+  const appAddress = po.tenant?.address || process.env.APP_ADDRESS || "Jl. Raya Utama No. 123, Jakarta Selatan";
+  const appPhone = po.tenant?.phone || process.env.APP_PHONE || "0812-3456-7890";
+  const npwp = po.tenant?.npwp || process.env.NPWP || "00.000.000.0-000.000";
 
   const statusLabel =
     po.status === "CLOSED" ? "LUNAS / SELESAI" : po.status === "PARTIAL" ? "SEBAGIAN (PARTIAL)" : "PENDING (BELUM LUNAS)";

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifySessionToken, COOKIE_NAME } from "@/lib/auth";
+import { getSessionData, COOKIE_NAME } from "@/lib/auth";
 
 export const config = {
   matcher: [
@@ -25,10 +25,16 @@ export async function middleware(req: NextRequest) {
 
   // 2. Check session token from cookie
   const sessionToken = req.cookies.get(COOKIE_NAME)?.value;
-  const isValid = await verifySessionToken(sessionToken);
+  const session = await getSessionData(sessionToken);
 
-  if (isValid) {
-    return NextResponse.next();
+  if (session.valid && session.tenantId) {
+    const requestHeaders = new Headers(req.headers);
+    requestHeaders.set("x-tenant-id", session.tenantId);
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
   }
 
   // 3. If accessing API route without valid session, return 401

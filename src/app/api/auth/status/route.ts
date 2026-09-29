@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
-import { isPINInitialized } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const initialized = await isPINInitialized();
+    const tenantCount = await prisma.tenant.count();
     return NextResponse.json({
-      isInitialized: initialized,
+      isInitialized: tenantCount > 0,
+      tenantCount,
     });
   } catch (e: any) {
     console.error("Auth status check failed:", e);

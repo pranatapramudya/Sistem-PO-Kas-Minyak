@@ -1,11 +1,13 @@
-import { Suspense } from "react";
+import { cookies } from "next/headers";
 import { DashboardClient } from "./DashboardClient";
 import { prisma } from "@/lib/prisma";
+import { COOKIE_NAME, getSessionData, DEFAULT_TENANT_ID, getTenantById } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
-async function getDashboardData() {
+async function getDashboardData(tenantId: string) {
   const pos = await prisma.purchaseOrder.findMany({
+    where: { tenantId },
     include: {
       items: true,
       cashInflow: true,
@@ -37,8 +39,9 @@ async function getDashboardData() {
   });
 }
 
-async function getMetrics() {
+async function getMetrics(tenantId: string) {
   const pos = await prisma.purchaseOrder.findMany({
+    where: { tenantId },
     include: { cashInflow: true },
   });
 
@@ -47,9 +50,8 @@ async function getMetrics() {
 
   const outstandingPOs = pos.filter((p) => p.status !== "CLOSED");
   const totalOutstandingModal = outstandingPOs.reduce((sum, p) => sum + p.totalCost, 0);
-  const totalCashInflow = pos.reduce((sum, p) => sum + p.cashInflow.reduce((s, c) => s + c.amount, 0), 0);
   const totalOutstandingReceivables = outstandingPOs.reduce(
-    (sum, p) => sum + p.totalCost - p.cashInflow.reduce((s, c) => s + c.amount, 0),
+    (sum, p) => sum + Math.max(0, p.totalCost - p.cashInflow.reduce((s, c) => s + c.amount, 0)),
     0
   );
   const closedPOs = pos.filter((p) => p.status === "CLOSED");
@@ -59,7 +61,7 @@ async function getMetrics() {
   const closedPOCount = closedPOs.length;
 
   return {
-    activeCapital: 80_000_000 - totalOutstandingModal,
+    activeCapital: totalOutstandingModal,
     outstandingReceivables: totalOutstandingReceivables,
     monthlyProfit,
     closedPOCount,
@@ -67,12 +69,27 @@ async function getMetrics() {
 }
 
 export default async function Page() {
-  const [data, metrics] = await Promise.all([getDashboardData(), getMetrics()]);
+  const cookieStore = cookies();
+  const sessionToken = cookieStore.get(COOKIE_NAME)?.value;
+  const session = await getSessionData(sessionToken);
+  const tenantId = session.valid && session.tenantId ? session.tenantId : DEFAULT_TENANT_ID;
+
+  const [data, metrics, tenant] = await Promise.all([
+    getDashboardData(tenantId),
+    getMetrics(tenantId),
+    getTenantById(tenantId),
+  ]);
 
   return (
     <DashboardClient
       initialData={data}
       initialMetrics={metrics}
+      tenant={tenant ? {
+        id: tenant.id,
+        companyName: tenant.companyName,
+        ownerName: tenant.ownerName,
+        identifier: tenant.identifier,
+      } : null}
     />
   );
 }

@@ -3,15 +3,19 @@ import { prisma } from "@/lib/prisma";
 import * as XLSX from "xlsx";
 import { formatRupiah, formatDateIndo, terbilang } from "@/lib/utils";
 
+import { getTenantIdFromRequest } from "@/lib/auth";
+
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {
+    const tenantId = await getTenantIdFromRequest(request);
     const { searchParams } = new URL(request.url);
     const month = searchParams.get("month"); // YYYY-MM
     const year = searchParams.get("year");   // YYYY
 
     const pos = await prisma.purchaseOrder.findMany({
+      where: { tenantId },
       include: {
         items: true,
         cashInflow: true,

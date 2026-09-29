@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { saveNewPIN, createSessionToken, COOKIE_NAME } from "@/lib/auth";
+import { saveNewPIN, createSessionToken, COOKIE_NAME, DEFAULT_TENANT_ID } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     await saveNewPIN(pin, recoveryKey);
 
     // Auto login
-    const token = await createSessionToken(90);
+    const token = await createSessionToken(DEFAULT_TENANT_ID, 90);
     const res = NextResponse.json({
       success: true,
       message: "PIN keamanan berhasil dibuat",

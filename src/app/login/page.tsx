@@ -2,44 +2,50 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, Delete, ShieldCheck, AlertCircle, KeyRound, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { Lock, Delete, ShieldCheck, AlertCircle, KeyRound, ArrowLeft, CheckCircle2, Building, UserPlus, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-type AuthMode = "CHECKING" | "SETUP_CREATE" | "SETUP_CONFIRM" | "LOGIN" | "RESET";
+type AuthMode = "LOGIN" | "REGISTER" | "RESET";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [mode, setMode] = useState<AuthMode>("CHECKING");
+  const [mode, setMode] = useState<AuthMode>("LOGIN");
+
+  // Login states
+  const [identifier, setIdentifier] = useState("");
   const [pin, setPin] = useState("");
-  const [createdPin, setCreatedPin] = useState("");
+  const [remember, setRemember] = useState(true);
+
+  // Register states
+  const [regCompanyName, setRegCompanyName] = useState("");
+  const [regIdentifier, setRegIdentifier] = useState("");
+  const [regOwnerName, setRegOwnerName] = useState("");
+  const [regPin, setRegPin] = useState("");
+  const [regPinConfirm, setRegPinConfirm] = useState("");
+
+  // Reset states
   const [recoveryKey, setRecoveryKey] = useState("");
+  const [resetIdentifier, setResetIdentifier] = useState("");
+  const [newPin, setNewPin] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
-  const [remember, setRemember] = useState(true);
   const [isShaking, setIsShaking] = useState(false);
 
-  // Check whether a PIN has already been set up in Neon database
+  // Load last used identifier from localStorage
   useEffect(() => {
-    async function checkStatus() {
-      try {
-        const res = await fetch("/api/auth/status");
-        if (res.ok) {
-          const data = await res.json();
-          if (data.isInitialized) {
-            setMode("LOGIN");
-          } else {
-            setMode("SETUP_CREATE");
-          }
-        } else {
-          setMode("LOGIN");
-        }
-      } catch {
-        setMode("LOGIN");
+    try {
+      const saved = localStorage.getItem("last_identifier");
+      if (saved) {
+        setIdentifier(saved);
+      } else {
+        setIdentifier("admin");
       }
+    } catch {
+      setIdentifier("admin");
     }
-    checkStatus();
   }, []);
 
   const triggerShake = (errMsg: string) => {
@@ -58,7 +64,7 @@ export default function LoginPage() {
 
       // Auto submit when 6 digits reached
       if (nextPin.length === 6) {
-        handleCompletePin(nextPin);
+        submitLogin(identifier, nextPin);
       }
     }
   };
@@ -73,27 +79,8 @@ export default function LoginPage() {
     setError(null);
   };
 
-  const handleCompletePin = async (inputPin: string) => {
-    if (mode === "LOGIN") {
-      submitLogin(inputPin);
-    } else if (mode === "SETUP_CREATE") {
-      setCreatedPin(inputPin);
-      setPin("");
-      setError(null);
-      setMode("SETUP_CONFIRM");
-    } else if (mode === "SETUP_CONFIRM") {
-      if (inputPin !== createdPin) {
-        triggerShake("PIN konfirmasi tidak cocok. Silakan buat ulang.");
-        setCreatedPin("");
-        setMode("SETUP_CREATE");
-        return;
-      }
-      submitSetup(inputPin);
-    }
-  };
-
   // Submit Login
-  const submitLogin = async (pinToSubmit: string) => {
+  const submitLogin = async (idToSubmit: string, pinToSubmit: string) => {
     setLoading(true);
     setError(null);
 
@@ -101,63 +88,49 @@ export default function LoginPage() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pin: pinToSubmit, remember }),
+        body: JSON.stringify({
+          identifier: idToSubmit.trim() || "admin",
+          pin: pinToSubmit,
+          remember,
+        }),
       });
 
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error(data.error || "PIN yang dimasukkan salah.");
+        throw new Error(data.error || "Username atau PIN salah.");
       }
+
+      // Save identifier for future logins
+      try {
+        localStorage.setItem("last_identifier", idToSubmit.trim() || "admin");
+      } catch {}
 
       router.replace("/");
       router.refresh();
     } catch (err: any) {
-      triggerShake(err.message || "PIN salah. Silakan coba lagi.");
+      triggerShake(err.message || "Login gagal. Periksa username dan PIN Anda.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Submit First-Time Setup
-  const submitSetup = async (pinToSubmit: string) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const res = await fetch("/api/auth/setup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pin: pinToSubmit, recoveryKey: "sim2026" }),
-      });
-
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(data.error || "Gagal membuat PIN.");
-      }
-
-      setSuccessMsg("PIN berhasil dibuat! Mengalihkan...");
-      setTimeout(() => {
-        router.replace("/");
-        router.refresh();
-      }, 700);
-    } catch (err: any) {
-      triggerShake(err.message || "Gagal membuat PIN. Silakan ulangi.");
-      setMode("SETUP_CREATE");
-      setCreatedPin("");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Submit Reset PIN via Recovery Key
-  const handleResetSubmit = async (e: React.FormEvent) => {
+  // Submit Register New Tenant
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!recoveryKey.trim()) {
-      setError("Masukkan kode pemulihan.");
+    if (!regCompanyName.trim()) {
+      setError("Nama Usaha / Toko wajib diisi.");
       return;
     }
-    if (pin.length !== 6) {
-      setError("PIN baru harus 6 digit angka.");
+    if (!regIdentifier.trim()) {
+      setError("Username / No. WhatsApp wajib diisi untuk login.");
+      return;
+    }
+    if (regPin.length !== 6 || !/^\d{6}$/.test(regPin)) {
+      setError("PIN harus 6 digit angka.");
+      return;
+    }
+    if (regPin !== regPinConfirm) {
+      setError("Konfirmasi PIN tidak cocok.");
       return;
     }
 
@@ -165,34 +138,46 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      const res = await fetch("/api/auth/reset", {
+      const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recoveryKey: recoveryKey.trim(), newPin: pin }),
+        body: JSON.stringify({
+          companyName: regCompanyName.trim(),
+          identifier: regIdentifier.trim(),
+          ownerName: regOwnerName.trim() || undefined,
+          pin: regPin,
+        }),
       });
 
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error(data.error || "Kode pemulihan salah.");
+        throw new Error(data.error || "Gagal mendaftarkan usaha baru.");
       }
 
-      setSuccessMsg("PIN berhasil direset! Mengalihkan ke dashboard...");
+      try {
+        localStorage.setItem("last_identifier", regIdentifier.trim());
+      } catch {}
+
+      setSuccessMsg("Pendaftaran berhasil! Mengalihkan ke dashboard...");
       setTimeout(() => {
         router.replace("/");
         router.refresh();
       }, 700);
     } catch (err: any) {
-      setError(err.message || "Gagal mereset PIN.");
+      setError(err.message || "Gagal mendaftar.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Allow physical keyboard for numeric input
+  // Physical keyboard support for numeric input
   useEffect(() => {
-    if (mode === "RESET" || mode === "CHECKING") return;
+    if (mode !== "LOGIN") return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't intercept if user is typing in the identifier input
+      if (document.activeElement?.tagName === "INPUT") return;
+
       if (/^[0-9]$/.test(e.key)) {
         handleKeyPress(e.key);
       } else if (e.key === "Backspace") {
@@ -204,136 +189,148 @@ export default function LoginPage() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [pin, mode, loading, createdPin]);
-
-  if (mode === "CHECKING") {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="flex flex-col items-center space-y-3">
-          <div className="w-10 h-10 border-3 border-amber-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs text-slate-500 font-medium">Memuat sistem keamanan...</p>
-        </div>
-      </div>
-    );
-  }
+  }, [pin, mode, loading, identifier]);
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col justify-between items-center p-4 sm:p-6 select-none font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col justify-between items-center p-4 sm:p-6 font-sans">
       {/* Top Header */}
-      <div className="pt-6 sm:pt-8 flex flex-col items-center text-center space-y-3 w-full max-w-xs">
+      <div className="pt-4 sm:pt-6 flex flex-col items-center text-center space-y-2.5 w-full max-w-sm">
         <div className="w-13 h-13 rounded-2xl bg-amber-50 border border-amber-200/80 flex items-center justify-center text-amber-600 shadow-xs">
-          {mode === "RESET" ? (
-            <KeyRound className="w-6 h-6" />
-          ) : mode === "SETUP_CREATE" || mode === "SETUP_CONFIRM" ? (
-            <ShieldCheck className="w-6 h-6 text-emerald-600" />
+          {mode === "REGISTER" ? (
+            <UserPlus className="w-6 h-6 text-emerald-600" />
+          ) : mode === "RESET" ? (
+            <KeyRound className="w-6 h-6 text-amber-600" />
           ) : (
-            <Lock className="w-6 h-6" />
+            <Lock className="w-6 h-6 text-slate-900" />
           )}
         </div>
 
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900">
             Sistem PO &amp; Kas Minyak
           </h1>
-          {mode === "LOGIN" && (
-            <p className="text-xs text-slate-500">
-              Masukkan 6 digit PIN Anda untuk masuk
-            </p>
-          )}
+          <p className="text-xs text-slate-500 font-medium">
+            Platform Manajemen Pembukuan PO &amp; Kas Minyak
+          </p>
         </div>
 
-        {/* Clear Step-by-Step Instruction Cards */}
-        {mode === "SETUP_CREATE" && (
-          <div className="bg-emerald-50 border border-emerald-200/80 rounded-xl p-3 text-center space-y-1 w-full animate-in fade-in duration-200">
-            <p className="text-xs font-bold text-emerald-900 flex items-center justify-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              Langkah 1 dari 2: Buat PIN Baru
-            </p>
-            <p className="text-[11px] text-emerald-700 leading-relaxed">
-              Tekan <strong>6 angka</strong> pilihan Anda pada tombol keypad di bawah untuk dijadikan PIN login rahasia.
-            </p>
-          </div>
-        )}
-
-        {mode === "SETUP_CONFIRM" && (
-          <div className="bg-blue-50 border border-blue-200/80 rounded-xl p-3 text-center space-y-1 w-full animate-in fade-in duration-200">
-            <p className="text-xs font-bold text-blue-900 flex items-center justify-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-blue-600" />
-              Langkah 2 dari 2: Konfirmasi PIN
-            </p>
-            <p className="text-[11px] text-blue-700 leading-relaxed">
-              Ketik kembali <strong>6 angka yang sama</strong> untuk memastikan Anda tidak salah tekan.
-            </p>
-          </div>
-        )}
-
-        {mode === "RESET" && (
-          <div className="bg-amber-50 border border-amber-200/80 rounded-xl p-3 text-center space-y-1 w-full animate-in fade-in duration-200">
-            <p className="text-xs font-bold text-amber-900 flex items-center justify-center gap-1.5">
-              <KeyRound className="w-4 h-4 text-amber-600" />
-              Pemulihan &amp; Ganti PIN
-            </p>
-            <p className="text-[11px] text-amber-800 leading-relaxed">
-              Masukkan kode pemulihan master lalu tentukan PIN baru Anda.
-            </p>
-          </div>
-        )}
+        {/* Mode Switcher Tabs */}
+        <div className="grid grid-cols-2 p-1 bg-slate-200/70 rounded-xl w-full text-xs font-bold gap-1 mt-2">
+          <button
+            type="button"
+            onClick={() => {
+              setError(null);
+              setSuccessMsg(null);
+              setPin("");
+              setMode("LOGIN");
+            }}
+            className={`py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+              mode === "LOGIN"
+                ? "bg-white text-slate-900 shadow-xs"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <LogIn className="w-3.5 h-3.5" /> Masuk
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setError(null);
+              setSuccessMsg(null);
+              setMode("REGISTER");
+            }}
+            className={`py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+              mode === "REGISTER"
+                ? "bg-white text-emerald-700 shadow-xs"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <UserPlus className="w-3.5 h-3.5" /> Daftar Baru
+          </button>
+        </div>
       </div>
 
-      {/* Main Body */}
-      {mode === "RESET" ? (
-        /* Reset PIN View */
-        <div className="w-full max-w-sm bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4 my-auto">
-          <div className="flex items-center gap-2 border-b pb-3">
-            <button
-              onClick={() => {
-                setError(null);
-                setPin("");
-                setMode("LOGIN");
-              }}
-              className="p-1 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100"
-              title="Kembali ke Login"
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </button>
-            <h2 className="text-sm font-bold text-slate-900">Reset PIN Anda</h2>
+      {/* Mode: REGISTER */}
+      {mode === "REGISTER" && (
+        <div className="w-full max-w-sm bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4 my-auto">
+          <div className="border-b pb-2.5">
+            <h2 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+              <Building className="w-4 h-4 text-emerald-600" /> Daftar Toko / Usaha Baru
+            </h2>
+            <p className="text-[11px] text-slate-500 mt-0.5">
+              Data transaksi Anda akan terpisah khusus untuk usaha Anda sendiri.
+            </p>
           </div>
 
-          <form onSubmit={handleResetSubmit} className="space-y-3.5">
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-700">Kode Pemulihan (Recovery Key)</label>
+          <form onSubmit={handleRegisterSubmit} className="space-y-3">
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-700">Nama Usaha / Toko *</label>
               <Input
-                type="text"
-                placeholder="Default: sim2026"
-                value={recoveryKey}
-                onChange={(e) => setRecoveryKey(e.target.value)}
-                className="h-10 text-xs sm:text-sm font-mono border-slate-300"
-                autoFocus
+                placeholder="Contoh: Toko Minyak Barokah / CV. Sawit"
+                value={regCompanyName}
+                onChange={(e) => setRegCompanyName(e.target.value)}
+                className="h-10 text-xs sm:text-sm"
+                required
               />
-              <p className="text-[11px] text-slate-500">Kode standar master: <code>sim2026</code></p>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-700">PIN Baru (6 Digit Angka)</label>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-700">Username / No. WhatsApp (Untuk Login) *</label>
               <Input
-                type="password"
-                maxLength={6}
-                placeholder="Contoh: 123456"
-                value={pin}
-                onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
-                className="h-10 text-xs sm:text-sm font-mono tracking-widest text-center border-slate-300"
+                placeholder="Contoh: 085812345678 atau nama_anda"
+                value={regIdentifier}
+                onChange={(e) => setRegIdentifier(e.target.value.toLowerCase().replace(/\s+/g, ""))}
+                className="h-10 text-xs sm:text-sm font-mono"
+                required
               />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-700">Nama Pemilik / Pengelola (Opsional)</label>
+              <Input
+                placeholder="Contoh: Budi Prasetyo"
+                value={regOwnerName}
+                onChange={(e) => setRegOwnerName(e.target.value)}
+                className="h-10 text-xs sm:text-sm"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Buat PIN (6 Angka) *</label>
+                <Input
+                  type="password"
+                  maxLength={6}
+                  placeholder="123456"
+                  value={regPin}
+                  onChange={(e) => setRegPin(e.target.value.replace(/\D/g, ""))}
+                  className="h-10 text-xs sm:text-sm font-mono tracking-widest text-center"
+                  required
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Ulangi PIN *</label>
+                <Input
+                  type="password"
+                  maxLength={6}
+                  placeholder="123456"
+                  value={regPinConfirm}
+                  onChange={(e) => setRegPinConfirm(e.target.value.replace(/\D/g, ""))}
+                  className="h-10 text-xs sm:text-sm font-mono tracking-widest text-center"
+                  required
+                />
+              </div>
             </div>
 
             {error && (
-              <p className="text-xs text-rose-600 font-medium flex items-center gap-1">
+              <p className="text-xs text-rose-600 font-semibold flex items-center gap-1">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                 {error}
               </p>
             )}
 
             {successMsg && (
-              <p className="text-xs text-emerald-600 font-medium flex items-center gap-1">
+              <p className="text-xs text-emerald-600 font-semibold flex items-center gap-1">
                 <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                 {successMsg}
               </p>
@@ -341,19 +338,45 @@ export default function LoginPage() {
 
             <Button
               type="submit"
-              disabled={loading || pin.length !== 6 || !recoveryKey}
-              className="w-full h-10 font-bold bg-slate-900 hover:bg-slate-800 text-white"
+              disabled={loading}
+              className="w-full h-10 font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs mt-2"
             >
-              {loading ? "Menyimpan PIN Baru..." : "Simpan & Masuk ke Aplikasi"}
+              {loading ? "Mendaftarkan Usaha..." : "Daftar & Buka Aplikasi"}
             </Button>
           </form>
         </div>
-      ) : (
-        /* PIN Keypad View (Light Theme) */
-        <div className="w-full max-w-xs flex flex-col items-center space-y-4 sm:space-y-5 my-auto py-2">
+      )}
+
+      {/* Mode: LOGIN (Keypad 0-Latency) */}
+      {mode === "LOGIN" && (
+        <div className="w-full max-w-xs flex flex-col items-center space-y-3.5 my-auto py-1">
+          {/* Identifier Input Bar */}
+          <div className="w-full bg-white border border-slate-200/90 rounded-xl p-2.5 shadow-2xs space-y-1">
+            <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
+              <span>Akun / Username Toko</span>
+              <button
+                type="button"
+                onClick={() => setMode("REGISTER")}
+                className="text-emerald-700 hover:underline"
+              >
+                + Daftar Toko Baru
+              </button>
+            </div>
+            <Input
+              type="text"
+              placeholder="Username atau No. HP (Default: admin)"
+              value={identifier}
+              onChange={(e) => {
+                setIdentifier(e.target.value);
+                setError(null);
+              }}
+              className="h-9 text-xs sm:text-sm font-mono border-slate-200 font-medium"
+            />
+          </div>
+
           {/* 6 Dot Indicators */}
           <div
-            className={`flex items-center justify-center gap-3.5 transition-transform duration-150 ${
+            className={`flex items-center justify-center gap-3.5 transition-transform duration-150 pt-1 ${
               isShaking ? "animate-bounce text-rose-500" : ""
             }`}
           >
@@ -370,46 +393,33 @@ export default function LoginPage() {
           </div>
 
           {/* Status / Message Display */}
-          <div className="h-6 flex items-center justify-center text-center">
+          <div className="h-5 flex items-center justify-center text-center">
             {loading ? (
               <p className="text-xs text-amber-600 font-semibold animate-pulse flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
-                Memproses keamanan...
-              </p>
-            ) : successMsg ? (
-              <p className="text-xs text-emerald-600 font-semibold flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                {successMsg}
+                Memeriksa keamanan...
               </p>
             ) : error ? (
               <p className="text-xs text-rose-600 font-semibold flex items-center gap-1 animate-in fade-in duration-200">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                 {error}
               </p>
-            ) : mode === "SETUP_CREATE" ? (
-              <p className="text-xs text-emerald-800 font-semibold">
-                Tekan 6 angka pada tombol keypad di bawah
-              </p>
-            ) : mode === "SETUP_CONFIRM" ? (
-              <p className="text-xs text-blue-800 font-semibold">
-                Ketik kembali 6 angka yang sama seperti sebelumnya
-              </p>
             ) : (
-              <p className="text-xs text-slate-600 font-medium">
-                Ketik 6 digit PIN untuk membuka aplikasi
+              <p className="text-xs text-slate-500 font-medium">
+                Masukkan 6 digit PIN akun Anda
               </p>
             )}
           </div>
 
           {/* Numeric Keypad Grid (Light Mode) */}
-          <div className="grid grid-cols-3 gap-2.5 sm:gap-3.5 w-full pt-1">
+          <div className="grid grid-cols-3 gap-2.5 sm:gap-3 w-full">
             {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((num) => (
               <button
                 key={num}
                 type="button"
                 onClick={() => handleKeyPress(num)}
                 disabled={loading}
-                className="h-14 sm:h-15 rounded-2xl bg-white hover:bg-slate-100/80 active:bg-slate-900 active:text-white border border-slate-200/90 text-xl font-bold font-mono text-slate-800 transition-all active:scale-95 flex items-center justify-center shadow-xs disabled:opacity-50 touch-manipulation cursor-pointer"
+                className="h-13 sm:h-14 rounded-2xl bg-white hover:bg-slate-100 active:bg-slate-900 active:text-white border border-slate-200/90 text-xl font-bold font-mono text-slate-800 transition-all active:scale-95 flex items-center justify-center shadow-xs disabled:opacity-50 touch-manipulation cursor-pointer"
               >
                 {num}
               </button>
@@ -420,7 +430,7 @@ export default function LoginPage() {
               type="button"
               onClick={handleClear}
               disabled={loading || pin.length === 0}
-              className="h-14 sm:h-15 rounded-2xl text-[11px] sm:text-xs font-bold text-slate-400 hover:text-slate-800 hover:bg-slate-100 active:scale-95 transition-all flex items-center justify-center disabled:opacity-30 touch-manipulation cursor-pointer"
+              className="h-13 sm:h-14 rounded-2xl text-[11px] sm:text-xs font-bold text-slate-400 hover:text-slate-800 hover:bg-slate-100 active:scale-95 transition-all flex items-center justify-center disabled:opacity-30 touch-manipulation cursor-pointer"
             >
               HAPUS
             </button>
@@ -429,7 +439,7 @@ export default function LoginPage() {
               type="button"
               onClick={() => handleKeyPress("0")}
               disabled={loading}
-              className="h-14 sm:h-15 rounded-2xl bg-white hover:bg-slate-100/80 active:bg-slate-900 active:text-white border border-slate-200/90 text-xl font-bold font-mono text-slate-800 transition-all active:scale-95 flex items-center justify-center shadow-xs disabled:opacity-50 touch-manipulation cursor-pointer"
+              className="h-13 sm:h-14 rounded-2xl bg-white hover:bg-slate-100 active:bg-slate-900 active:text-white border border-slate-200/90 text-xl font-bold font-mono text-slate-800 transition-all active:scale-95 flex items-center justify-center shadow-xs disabled:opacity-50 touch-manipulation cursor-pointer"
             >
               0
             </button>
@@ -438,63 +448,32 @@ export default function LoginPage() {
               type="button"
               onClick={handleDelete}
               disabled={loading || pin.length === 0}
-              className="h-14 sm:h-15 rounded-2xl bg-slate-100/60 hover:bg-slate-200/80 active:scale-95 text-slate-500 hover:text-slate-800 transition-all flex items-center justify-center disabled:opacity-30 touch-manipulation cursor-pointer border border-slate-200/60"
+              className="h-13 sm:h-14 rounded-2xl bg-slate-100/60 hover:bg-slate-200/80 active:scale-95 text-slate-500 hover:text-slate-800 transition-all flex items-center justify-center disabled:opacity-30 touch-manipulation cursor-pointer border border-slate-200/60"
               title="Hapus Satu Digit"
             >
               <Delete className="w-5 h-5" />
             </button>
           </div>
 
-          {/* Bottom Actions: Remember me & Lupa PIN */}
-          <div className="flex flex-col items-center gap-2 pt-2 w-full">
-            {mode === "LOGIN" && (
-              <>
-                <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={remember}
-                    onChange={(e) => setRemember(e.target.checked)}
-                    className="w-4 h-4 rounded border-slate-300 bg-white text-slate-900 focus:ring-0 accent-slate-900 cursor-pointer"
-                  />
-                  <span>Ingat perangkat ini (30 Hari)</span>
-                </label>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setError(null);
-                    setPin("");
-                    setMode("RESET");
-                  }}
-                  className="text-xs text-amber-700 hover:text-amber-800 font-semibold hover:underline pt-1 cursor-pointer"
-                >
-                  Lupa PIN? Reset di sini
-                </button>
-              </>
-            )}
-
-            {mode === "SETUP_CONFIRM" && (
-              <button
-                type="button"
-                onClick={() => {
-                  setError(null);
-                  setPin("");
-                  setCreatedPin("");
-                  setMode("SETUP_CREATE");
-                }}
-                className="text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1 font-medium pt-1"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" /> Ulangi Buat PIN Baru
-              </button>
-            )}
+          {/* Remember me & Action Links */}
+          <div className="flex flex-col items-center gap-1.5 pt-1 w-full text-xs">
+            <label className="flex items-center gap-2 text-slate-600 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={remember}
+                onChange={(e) => setRemember(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-300 bg-white text-slate-900 focus:ring-0 accent-slate-900 cursor-pointer"
+              />
+              <span>Ingat perangkat ini (30 Hari)</span>
+            </label>
           </div>
         </div>
       )}
 
       {/* Footer Info */}
-      <div className="pb-4 text-center">
+      <div className="pb-3 text-center">
         <p className="text-xs text-slate-400 font-medium">
-          🔒 Aplikasi Private &bull; Sesi tersimpan aman di perangkat Anda
+          🔒 Multi-Tenant Aman &bull; Data tiap usaha terpisah 100%
         </p>
       </div>
     </div>

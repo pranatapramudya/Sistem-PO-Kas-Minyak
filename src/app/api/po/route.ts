@@ -3,10 +3,14 @@ import { prisma } from "@/lib/prisma";
 import { generatePONumber } from "@/lib/utils";
 import { saveUploadFile, validateUploadFile } from "@/lib/upload";
 import { createPOSchema } from "@/lib/validations";
+import { getTenantIdFromRequest } from "@/lib/auth";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const tenantId = await getTenantIdFromRequest(request);
+
     const pos = await prisma.purchaseOrder.findMany({
+      where: { tenantId },
       include: {
         items: true,
         cashInflow: true,
@@ -46,6 +50,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const tenantId = await getTenantIdFromRequest(request);
     const formData = await request.formData();
 
     const date = formData.get("date") as string;
@@ -79,15 +84,15 @@ export async function POST(request: NextRequest) {
       proofFileUrl = await saveUploadFile(proofFile);
     }
 
-    // Generate PO Number
-    const count = await prisma.purchaseOrder.count();
+    // Generate PO Number scoped by tenant count
+    const count = await prisma.purchaseOrder.count({ where: { tenantId } });
     const poNumber = generatePONumber(count);
 
     // Calculate total cost
     const items = parsed.data.items;
     const totalCost = items.reduce((sum, item) => sum + item.qty * item.unitPrice, 0);
 
-    // Create PO with items
+    // Create PO with items scoped to active tenant
     const po = await prisma.purchaseOrder.create({
       data: {
         poNumber,
@@ -97,6 +102,7 @@ export async function POST(request: NextRequest) {
         expectedRevenue,
         proofFileUrl,
         notes,
+        tenantId,
         items: {
           create: items.map((item) => ({
             itemName: item.itemName,

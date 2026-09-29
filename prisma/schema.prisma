@@ -7,6 +7,25 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Tenant {
+  id             String          @id @default(cuid())
+  companyName    String
+  ownerName      String?
+  identifier     String          @unique // No. HP / Username / Email untuk login
+  address        String?
+  phone          String?
+  npwp           String?
+  pinHash        String
+  recoveryKey    String          @default("sim2026")
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  purchaseOrders PurchaseOrder[]
+  cashInflows    CashInflow[]
+
+  @@index([identifier])
+}
+
 model PurchaseOrder {
   id              String       @id @default(cuid())
   poNumber        String       @unique
@@ -20,9 +39,13 @@ model PurchaseOrder {
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
+  tenantId        String?
+  tenant          Tenant?      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   items      OrderItem[]
   cashInflow CashInflow[]
 
+  @@index([tenantId])
   @@index([date])
   @@index([status])
   @@index([supplierName])
@@ -52,6 +75,10 @@ model CashInflow {
   notes          String?
   createdAt      DateTime       @default(now())
 
+  tenantId       String?
+  tenant         Tenant?        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
   @@index([poId])
   @@index([receivedDate])
 }
