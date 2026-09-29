@@ -59,7 +59,7 @@ export default function NewPOPage() {
     }
   };
 
-  const calculateSubtotal = (qty: number, unitPrice: number) => qty * unitPrice;
+  const calculateSubtotal = (qty: any, unitPrice: any) => (Number(qty) || 0) * (Number(unitPrice) || 0);
   const calculateTotal = () => {
     return form.watch("items").reduce((sum, item) => sum + calculateSubtotal(item.qty, item.unitPrice), 0);
   };
@@ -154,11 +154,21 @@ export default function NewPOPage() {
                       control={form.control}
                       render={({ field }) => (
                         <Input
-                          type="number"
-                          step="0.01"
-                          min="0.01"
-                          {...field}
-                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          type="text"
+                          inputMode="decimal"
+                          placeholder="1"
+                          value={field.value === 0 || field.value === undefined || field.value === null ? "" : field.value}
+                          onFocus={(e) => e.target.select()}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/,/g, ".");
+                            if (val === "" || /^\d*\.?\d*$/.test(val)) {
+                              field.onChange(val === "" ? 0 : val);
+                            }
+                          }}
+                          onBlur={(e) => {
+                            const num = parseFloat(String(e.target.value)) || 0;
+                            field.onChange(num);
+                          }}
                         />
                       )}
                     />
@@ -189,12 +199,15 @@ export default function NewPOPage() {
                       control={form.control}
                       render={({ field }) => (
                         <Input
-                          type="number"
-                          step="1"
-                          min="1"
-                          placeholder="Rp"
-                          {...field}
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="0"
+                          value={field.value !== undefined && field.value !== null && field.value !== 0 ? Number(field.value).toLocaleString("id-ID") : ""}
+                          onFocus={(e) => e.target.select()}
+                          onChange={(e) => {
+                            const raw = e.target.value.replace(/\D/g, "");
+                            field.onChange(raw ? parseInt(raw, 10) : 0);
+                          }}
                         />
                       )}
                     />
@@ -246,12 +259,15 @@ export default function NewPOPage() {
                   render={({ field }) => (
                     <Input
                       id="expectedRevenue"
-                      type="number"
-                      step="1"
-                      min="0"
-                      placeholder="Rp 0"
-                      {...field}
-                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="0"
+                      value={field.value !== undefined && field.value !== null && field.value !== 0 ? Number(field.value).toLocaleString("id-ID") : ""}
+                      onFocus={(e) => e.target.select()}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/\D/g, "");
+                        field.onChange(raw ? parseInt(raw, 10) : 0);
+                      }}
                     />
                   )}
                 />

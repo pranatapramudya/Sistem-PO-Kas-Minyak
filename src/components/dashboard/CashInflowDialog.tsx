@@ -210,13 +210,16 @@ export function CashInflowDialog({
               render={({ field }) => (
                 <Input
                   id="amount"
-                  type="number"
-                  step="1"
-                  min="1"
-                  placeholder="Contoh: 5000000"
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="0"
                   className="text-sm font-mono font-bold h-10 bg-white border-slate-200"
-                  {...field}
-                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                  value={field.value !== undefined && field.value !== null && field.value !== 0 ? Number(field.value).toLocaleString("id-ID") : ""}
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(/\D/g, "");
+                    field.onChange(raw ? parseInt(raw, 10) : 0);
+                  }}
                 />
               )}
             />

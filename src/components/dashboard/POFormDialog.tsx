@@ -85,7 +85,7 @@ export function POFormDialog({ open, onOpenChange, onSubmit, editData, loading }
     setProofFile(null);
   };
 
-  const calculateSubtotal = (qty: number, unitPrice: number) => (qty || 0) * (unitPrice || 0);
+  const calculateSubtotal = (qty: any, unitPrice: any) => (Number(qty) || 0) * (Number(unitPrice) || 0);
   const items = form.watch("items") || [];
   const totalModal = items.reduce(
     (sum, item) => sum + calculateSubtotal(item.qty, item.unitPrice),
@@ -235,12 +235,22 @@ export function POFormDialog({ open, onOpenChange, onSubmit, editData, loading }
                           control={form.control}
                           render={({ field }) => (
                             <Input
-                              type="number"
-                              step="0.01"
-                              min="0.01"
+                              type="text"
+                              inputMode="decimal"
+                              placeholder="1"
                               className="text-xs h-8 sm:h-9 font-mono bg-white"
-                              {...field}
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                              value={field.value === 0 || field.value === undefined || field.value === null ? "" : field.value}
+                              onFocus={(e) => e.target.select()}
+                              onChange={(e) => {
+                                const val = e.target.value.replace(/,/g, ".");
+                                if (val === "" || /^\d*\.?\d*$/.test(val)) {
+                                  field.onChange(val === "" ? 0 : val);
+                                }
+                              }}
+                              onBlur={(e) => {
+                                const num = parseFloat(String(e.target.value)) || 0;
+                                field.onChange(num);
+                              }}
                             />
                           )}
                         />
@@ -277,13 +287,16 @@ export function POFormDialog({ open, onOpenChange, onSubmit, editData, loading }
                           control={form.control}
                           render={({ field }) => (
                             <Input
-                              type="number"
-                              step="1"
-                              min="1"
-                              placeholder="Rp"
+                              type="text"
+                              inputMode="numeric"
+                              placeholder="0"
                               className="text-xs h-8 sm:h-9 font-mono bg-white"
-                              {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                              value={field.value !== undefined && field.value !== null && field.value !== 0 ? Number(field.value).toLocaleString("id-ID") : ""}
+                              onFocus={(e) => e.target.select()}
+                              onChange={(e) => {
+                                const raw = e.target.value.replace(/\D/g, "");
+                                field.onChange(raw ? parseInt(raw, 10) : 0);
+                              }}
                             />
                           )}
                         />
@@ -325,13 +338,16 @@ export function POFormDialog({ open, onOpenChange, onSubmit, editData, loading }
                 render={({ field }) => (
                   <Input
                     id="expectedRevenue"
-                    type="number"
-                    step="1"
-                    min="0"
-                    placeholder="Contoh: Rp 20000000"
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="0"
                     className="text-xs sm:text-sm h-9 sm:h-10 font-mono bg-white border-slate-200"
-                    {...field}
-                    onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                    value={field.value !== undefined && field.value !== null && field.value !== 0 ? Number(field.value).toLocaleString("id-ID") : ""}
+                    onFocus={(e) => e.target.select()}
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(/\D/g, "");
+                      field.onChange(raw ? parseInt(raw, 10) : 0);
+                    }}
                   />
                 )}
               />
