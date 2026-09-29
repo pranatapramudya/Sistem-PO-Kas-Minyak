@@ -42,8 +42,8 @@ export default async function POPrintPage({ params }: POPrintPageProps) {
     po.status === "CLOSED"
       ? "bg-emerald-50 text-emerald-700 border-emerald-300"
       : po.status === "PARTIAL"
-      ? "bg-blue-50 text-blue-700 border-blue-300"
-      : "bg-amber-50 text-amber-800 border-amber-300";
+        ? "bg-blue-50 text-blue-700 border-blue-300"
+        : "bg-amber-50 text-amber-800 border-amber-300";
 
   return (
     <div className="bg-slate-100 min-h-screen pb-12 print:bg-white print:p-0 print:m-0">
@@ -63,7 +63,7 @@ export default async function POPrintPage({ params }: POPrintPageProps) {
       <div className="print-scroll-wrapper w-full overflow-x-auto px-2 sm:px-6 pb-6 print:p-0 print:overflow-visible print:w-full">
         {/* A4 Paper Container with fixed standard proportions */}
         <div className="print-sheet w-[794px] max-w-[210mm] min-w-[760px] mx-auto bg-white border border-slate-300 shadow-md rounded-xs p-8 sm:p-10 text-slate-900 text-xs font-sans leading-relaxed print:w-full print:min-w-0 print:max-w-none print:shadow-none print:border-none print:p-0">
-          
+
           {/* Kop Surat Resmi: Selalu Berdampingan Kiri-Kanan */}
           <div className="flex items-start justify-between gap-4 pb-3">
             <div>
