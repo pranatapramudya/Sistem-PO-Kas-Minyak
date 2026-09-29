@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authenticateTenant, createSessionToken, COOKIE_NAME, DEFAULT_TENANT_ID } from "@/lib/auth";
+import { authenticateTenant, findTenantByIdentifier, createSessionToken, COOKIE_NAME, DEFAULT_TENANT_ID } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
@@ -16,7 +16,25 @@ export async function POST(req: NextRequest) {
     let tenant = null;
 
     if (identifier) {
+      // Check if account exists first
+      const existing = await findTenantByIdentifier(identifier);
+      if (!existing && identifier.toLowerCase() !== "admin") {
+        return NextResponse.json(
+          {
+            error: `Akun "${identifier}" belum terdaftar. Silakan klik tab "Daftar Baru" untuk membuat akun toko Anda.`,
+            notRegistered: true,
+          },
+          { status: 404 }
+        );
+      }
+
       tenant = await authenticateTenant(identifier, pin);
+      if (!tenant) {
+        return NextResponse.json(
+          { error: "PIN yang Anda masukkan salah. Silakan periksa 6 digit PIN akun Anda." },
+          { status: 401 }
+        );
+      }
     } else {
       // If no identifier is specified, check against default tenant (admin / CV. TRADING MINYAK)
       tenant = await authenticateTenant("admin", pin);
@@ -30,13 +48,13 @@ export async function POST(req: NextRequest) {
           }
         }
       }
-    }
 
-    if (!tenant) {
-      return NextResponse.json(
-        { error: "Username / No. HP atau PIN tidak sesuai. Silakan periksa kembali." },
-        { status: 401 }
-      );
+      if (!tenant) {
+        return NextResponse.json(
+          { error: "PIN salah atau akun tidak ditemukan. Silakan masukkan Username / No. HP Anda." },
+          { status: 401 }
+        );
+      }
     }
 
     const token = await createSessionToken(tenant.id, rememberDays);

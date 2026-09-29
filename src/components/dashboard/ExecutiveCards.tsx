@@ -60,10 +60,10 @@ export function ExecutiveCard({
       "border border-slate-200/90 shadow-xs hover:shadow-sm bg-white rounded-xl transition-all overflow-hidden flex flex-col justify-between border-t-2",
       style.topLine
     )}>
-      <CardContent className="p-3.5 sm:p-4 flex flex-col justify-between h-full space-y-2">
+      <CardContent className="p-3 sm:p-4 flex flex-col justify-between h-full space-y-2">
         {/* Top Row: Title + Icon */}
-        <div className="flex items-center justify-between gap-1.5">
-          <p className="text-xs sm:text-sm font-bold text-slate-600 truncate">
+        <div className="flex items-start justify-between gap-1.5 min-h-[2.25rem]">
+          <p className="text-[11px] sm:text-xs md:text-sm font-bold text-slate-700 leading-snug break-words">
             {title}
           </p>
           {icon && (
@@ -75,13 +75,13 @@ export function ExecutiveCard({
 
         {/* Big Number: Full card width */}
         <div>
-          <p className="text-base sm:text-xl md:text-2xl font-black font-mono tracking-tight text-slate-900 leading-tight truncate">
+          <p className="text-sm sm:text-lg md:text-2xl font-black font-mono tracking-tight text-slate-900 leading-tight break-words">
             {displayValue}
           </p>
 
           {/* Subtitle */}
           {subtitle && (
-            <p className="text-xs text-slate-500 font-medium mt-1 truncate">
+            <p className="text-[10px] sm:text-xs text-slate-500 font-medium mt-0.5 leading-tight break-words">
               {subtitle}
             </p>
           )}

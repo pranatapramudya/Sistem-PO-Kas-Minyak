@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, Delete, ShieldCheck, AlertCircle, KeyRound, ArrowLeft, CheckCircle2, Building, UserPlus, LogIn } from "lucide-react";
+import { Lock, Delete, ShieldCheck, AlertCircle, KeyRound, ArrowLeft, CheckCircle2, Building, UserPlus, LogIn, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -253,12 +253,23 @@ export default function LoginPage() {
       {/* Mode: REGISTER */}
       {mode === "REGISTER" && (
         <div className="w-full max-w-sm bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4 my-auto">
+          {/* Helper Guidance Callout */}
+          <div className="bg-emerald-50/80 border border-emerald-200/80 rounded-xl p-3 text-left space-y-1">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-900">
+              <UserPlus className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <span>Pendaftaran Toko Baru:</span>
+            </div>
+            <p className="text-[11px] text-emerald-800 leading-relaxed">
+              Belum punya akun? Isi data toko di bawah ini untuk memulai pembukuan PO &amp; kas minyak Anda. Data Anda 100% terisolasi khusus untuk usaha Anda.
+            </p>
+          </div>
+
           <div className="border-b pb-2.5">
             <h2 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
-              <Building className="w-4 h-4 text-emerald-600" /> Daftar Toko / Usaha Baru
+              <Building className="w-4 h-4 text-emerald-600" /> Formulir Buka Akun Toko
             </h2>
             <p className="text-[11px] text-slate-500 mt-0.5">
-              Data transaksi Anda akan terpisah khusus untuk usaha Anda sendiri.
+              Hanya butuh 30 detik untuk membuat akun usaha Anda.
             </p>
           </div>
 
@@ -269,7 +280,7 @@ export default function LoginPage() {
                 placeholder="Contoh: Toko Minyak Barokah / CV. Sawit"
                 value={regCompanyName}
                 onChange={(e) => setRegCompanyName(e.target.value)}
-                className="h-10 text-xs sm:text-sm"
+                className="h-10 text-xs sm:text-sm font-medium"
                 required
               />
             </div>
@@ -280,7 +291,7 @@ export default function LoginPage() {
                 placeholder="Contoh: 085812345678 atau nama_anda"
                 value={regIdentifier}
                 onChange={(e) => setRegIdentifier(e.target.value.toLowerCase().replace(/\s+/g, ""))}
-                className="h-10 text-xs sm:text-sm font-mono"
+                className="h-10 text-xs sm:text-sm font-mono font-medium"
                 required
               />
             </div>
@@ -304,7 +315,7 @@ export default function LoginPage() {
                   placeholder="123456"
                   value={regPin}
                   onChange={(e) => setRegPin(e.target.value.replace(/\D/g, ""))}
-                  className="h-10 text-xs sm:text-sm font-mono tracking-widest text-center"
+                  className="h-10 text-xs sm:text-sm font-mono tracking-widest text-center font-bold"
                   required
                 />
               </div>
@@ -316,7 +327,7 @@ export default function LoginPage() {
                   placeholder="123456"
                   value={regPinConfirm}
                   onChange={(e) => setRegPinConfirm(e.target.value.replace(/\D/g, ""))}
-                  className="h-10 text-xs sm:text-sm font-mono tracking-widest text-center"
+                  className="h-10 text-xs sm:text-sm font-mono tracking-widest text-center font-bold"
                   required
                 />
               </div>
@@ -339,25 +350,69 @@ export default function LoginPage() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-10 font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs mt-2"
+              className="w-full h-11 font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs mt-2"
             >
               {loading ? "Mendaftarkan Usaha..." : "Daftar & Buka Aplikasi"}
             </Button>
           </form>
+
+          {/* Quick switch to Login if already have account */}
+          <div className="pt-2 border-t border-slate-100 text-center">
+            <button
+              type="button"
+              onClick={() => {
+                setError(null);
+                setPin("");
+                setMode("LOGIN");
+              }}
+              className="w-full py-2.5 px-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <LogIn className="w-3.5 h-3.5 text-slate-600" />
+              Sudah punya akun toko? Masuk ke Akun Anda
+            </button>
+          </div>
         </div>
       )}
 
       {/* Mode: LOGIN (Keypad 0-Latency) */}
       {mode === "LOGIN" && (
-        <div className="w-full max-w-xs flex flex-col items-center space-y-3.5 my-auto py-1">
+        <div className="w-full max-w-[360px] sm:max-w-sm flex flex-col items-center space-y-3.5 my-auto py-1">
+          {/* Helper Guidance Callout */}
+          <div className="w-full bg-blue-50/80 border border-blue-200/80 rounded-xl p-2.5 text-left space-y-0.5">
+            <div className="flex items-center justify-between text-xs font-bold text-blue-900">
+              <span className="flex items-center gap-1">
+                <Building className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                Masuk ke Toko Anda
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setError(null);
+                  setPin("");
+                  setMode("REGISTER");
+                }}
+                className="text-emerald-700 hover:underline text-[11px] font-bold"
+              >
+                + Belum Punya Akun?
+              </button>
+            </div>
+            <p className="text-[11px] text-blue-800 leading-snug">
+              Jika <strong>sudah punya akun</strong>, ketik Username/No. HP lalu tekan 6 angka PIN. Jika <strong>belum punya akun</strong>, silakan daftar baru terlebih dahulu.
+            </p>
+          </div>
+
           {/* Identifier Input Bar */}
           <div className="w-full bg-white border border-slate-200/90 rounded-xl p-2.5 shadow-2xs space-y-1">
             <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
-              <span>Akun / Username Toko</span>
+              <span>Akun / Username / No. HP Toko</span>
               <button
                 type="button"
-                onClick={() => setMode("REGISTER")}
-                className="text-emerald-700 hover:underline"
+                onClick={() => {
+                  setError(null);
+                  setPin("");
+                  setMode("REGISTER");
+                }}
+                className="text-emerald-700 hover:underline font-bold"
               >
                 + Daftar Toko Baru
               </button>
@@ -370,22 +425,22 @@ export default function LoginPage() {
                 setIdentifier(e.target.value);
                 setError(null);
               }}
-              className="h-9 text-xs sm:text-sm font-mono border-slate-200 font-medium"
+              className="h-10 text-sm font-mono border-slate-200 font-bold text-slate-900"
             />
           </div>
 
           {/* 6 Dot Indicators */}
           <div
-            className={`flex items-center justify-center gap-3.5 transition-transform duration-150 pt-1 ${
+            className={`flex items-center justify-center gap-3.5 sm:gap-4 transition-transform duration-150 py-1 ${
               isShaking ? "animate-bounce text-rose-500" : ""
             }`}
           >
             {[...Array(6)].map((_, i) => (
               <div
                 key={i}
-                className={`w-3.5 h-3.5 rounded-full border transition-all duration-100 ${
+                className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 transition-all duration-100 ${
                   i < pin.length
-                    ? "bg-slate-900 border-slate-900 shadow-xs scale-110"
+                    ? "bg-slate-900 border-slate-900 shadow-sm scale-110"
                     : "border-slate-300 bg-white"
                 }`}
               />
@@ -393,33 +448,33 @@ export default function LoginPage() {
           </div>
 
           {/* Status / Message Display */}
-          <div className="h-5 flex items-center justify-center text-center">
+          <div className="min-h-[28px] flex items-center justify-center text-center px-2">
             {loading ? (
               <p className="text-xs text-amber-600 font-semibold animate-pulse flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
-                Memeriksa keamanan...
+                Memeriksa keamanan akun...
               </p>
             ) : error ? (
-              <p className="text-xs text-rose-600 font-semibold flex items-center gap-1 animate-in fade-in duration-200">
-                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                {error}
+              <p className="text-xs text-rose-600 font-semibold flex items-center justify-center gap-1 animate-in fade-in duration-200 leading-snug">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{error}</span>
               </p>
             ) : (
               <p className="text-xs text-slate-500 font-medium">
-                Masukkan 6 digit PIN akun Anda
+                Ketik 6 digit PIN akun toko Anda pada tombol di bawah
               </p>
             )}
           </div>
 
-          {/* Numeric Keypad Grid (Light Mode) */}
-          <div className="grid grid-cols-3 gap-2.5 sm:gap-3 w-full">
+          {/* Numeric Keypad Grid (Besar & Jelas di HP) */}
+          <div className="grid grid-cols-3 gap-2.5 sm:gap-3.5 w-full">
             {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((num) => (
               <button
                 key={num}
                 type="button"
                 onClick={() => handleKeyPress(num)}
                 disabled={loading}
-                className="h-13 sm:h-14 rounded-2xl bg-white hover:bg-slate-100 active:bg-slate-900 active:text-white border border-slate-200/90 text-xl font-bold font-mono text-slate-800 transition-all active:scale-95 flex items-center justify-center shadow-xs disabled:opacity-50 touch-manipulation cursor-pointer"
+                className="h-14 sm:h-16 rounded-2xl bg-white hover:bg-slate-100 active:bg-slate-900 active:text-white border-2 border-slate-200/90 text-2xl sm:text-3xl font-extrabold font-mono text-slate-900 transition-all active:scale-95 flex items-center justify-center shadow-xs disabled:opacity-50 touch-manipulation cursor-pointer"
               >
                 {num}
               </button>
@@ -430,7 +485,7 @@ export default function LoginPage() {
               type="button"
               onClick={handleClear}
               disabled={loading || pin.length === 0}
-              className="h-13 sm:h-14 rounded-2xl text-[11px] sm:text-xs font-bold text-slate-400 hover:text-slate-800 hover:bg-slate-100 active:scale-95 transition-all flex items-center justify-center disabled:opacity-30 touch-manipulation cursor-pointer"
+              className="h-14 sm:h-16 rounded-2xl text-xs sm:text-sm font-black text-rose-600 bg-rose-50/70 hover:bg-rose-100 active:scale-95 border border-rose-200/80 transition-all flex items-center justify-center disabled:opacity-30 touch-manipulation cursor-pointer shadow-2xs"
             >
               HAPUS
             </button>
@@ -439,7 +494,7 @@ export default function LoginPage() {
               type="button"
               onClick={() => handleKeyPress("0")}
               disabled={loading}
-              className="h-13 sm:h-14 rounded-2xl bg-white hover:bg-slate-100 active:bg-slate-900 active:text-white border border-slate-200/90 text-xl font-bold font-mono text-slate-800 transition-all active:scale-95 flex items-center justify-center shadow-xs disabled:opacity-50 touch-manipulation cursor-pointer"
+              className="h-14 sm:h-16 rounded-2xl bg-white hover:bg-slate-100 active:bg-slate-900 active:text-white border-2 border-slate-200/90 text-2xl sm:text-3xl font-extrabold font-mono text-slate-900 transition-all active:scale-95 flex items-center justify-center shadow-xs disabled:opacity-50 touch-manipulation cursor-pointer"
             >
               0
             </button>
@@ -448,12 +503,26 @@ export default function LoginPage() {
               type="button"
               onClick={handleDelete}
               disabled={loading || pin.length === 0}
-              className="h-13 sm:h-14 rounded-2xl bg-slate-100/60 hover:bg-slate-200/80 active:scale-95 text-slate-500 hover:text-slate-800 transition-all flex items-center justify-center disabled:opacity-30 touch-manipulation cursor-pointer border border-slate-200/60"
+              className="h-14 sm:h-16 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 hover:text-slate-900 transition-all flex items-center justify-center disabled:opacity-30 touch-manipulation cursor-pointer border border-slate-200 shadow-2xs"
               title="Hapus Satu Digit"
             >
-              <Delete className="w-5 h-5" />
+              <Delete className="w-6 h-6 stroke-[2.2]" />
             </button>
           </div>
+
+          {/* Quick Switch Button to Register if No Account */}
+          <button
+            type="button"
+            onClick={() => {
+              setError(null);
+              setPin("");
+              setMode("REGISTER");
+            }}
+            className="w-full py-2.5 px-3 rounded-xl border border-dashed border-emerald-300 bg-emerald-50/70 hover:bg-emerald-100 text-emerald-800 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer"
+          >
+            <UserPlus className="w-4 h-4 text-emerald-600" />
+            Belum punya akun usaha? Daftar Toko Baru di Sini
+          </button>
 
           {/* Remember me & Action Links */}
           <div className="flex flex-col items-center gap-1.5 pt-1 w-full text-xs">
@@ -470,11 +539,19 @@ export default function LoginPage() {
         </div>
       )}
 
-      {/* Footer Info */}
-      <div className="pb-3 text-center">
+      {/* Footer Info & Panduan Link */}
+      <div className="pb-3 text-center space-y-1.5">
         <p className="text-xs text-slate-400 font-medium">
           🔒 Multi-Tenant Aman &bull; Data tiap usaha terpisah 100%
         </p>
+        <div>
+          <a
+            href="/panduan"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline hover:text-blue-800"
+          >
+            <BookOpen className="w-3.5 h-3.5" /> Buku Panduan Cara Pakai Aplikasi
+          </a>
+        </div>
       </div>
     </div>
   );

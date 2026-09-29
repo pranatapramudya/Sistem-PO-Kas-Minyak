@@ -27,6 +27,7 @@ import {
   RefreshCw,
   LogOut,
   X,
+  BookOpen,
 } from "lucide-react";
 
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
@@ -336,13 +337,23 @@ export function DashboardClient({ initialData, initialMetrics, tenant }: Dashboa
           </p>
         </div>
 
-        {/* Mobile Quick Logout (Top-Right) */}
-        <div className="flex md:hidden shrink-0">
+        {/* Mobile Quick Actions (Top-Right) */}
+        <div className="flex md:hidden items-center gap-1.5 shrink-0">
+          <Link href="/panduan">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 px-2 text-xs font-bold text-blue-700 bg-blue-50/80 hover:bg-blue-100 border-blue-200 rounded-lg shadow-2xs"
+              title="Buku Panduan Cara Pakai"
+            >
+              <BookOpen className="h-3.5 w-3.5 mr-1 text-blue-600" /> Panduan
+            </Button>
+          </Link>
           <Button
             onClick={handleLogout}
             variant="outline"
             size="sm"
-            className="h-8 px-2.5 text-xs text-slate-600 hover:text-rose-600 hover:bg-rose-50 border-slate-200 rounded-lg shadow-2xs"
+            className="h-8 px-2 text-xs text-slate-600 hover:text-rose-600 hover:bg-rose-50 border-slate-200 rounded-lg shadow-2xs"
             title="Keluar / Logout"
           >
             <LogOut className="h-3.5 w-3.5 mr-1" /> Logout
@@ -351,6 +362,12 @@ export function DashboardClient({ initialData, initialMetrics, tenant }: Dashboa
 
         {/* Desktop Action Buttons: Hidden on Mobile, Visible on md+ */}
         <div className="hidden md:flex items-center gap-2">
+          <Link href="/panduan">
+            <Button variant="outline" size="sm" className="h-9 text-xs sm:text-sm border-blue-200 text-blue-700 bg-blue-50/60 hover:bg-blue-100 font-semibold" title="Buku Panduan Cara Pakai">
+              <BookOpen className="h-3.5 w-3.5 mr-1 text-blue-600" /> Panduan
+            </Button>
+          </Link>
+
           <Link href="/settings">
             <Button variant="outline" size="sm" className="h-9 text-xs sm:text-sm border-slate-200" title="Pengaturan Kop Surat">
               <Settings className="h-3.5 w-3.5 mr-1" /> Pengaturan
