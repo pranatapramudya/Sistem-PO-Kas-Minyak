@@ -261,6 +261,41 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col justify-between items-center p-4 sm:p-6 font-sans">
+      {/* Full Clean Modern Loading Screen (100% Solid & Clean, No Background Bleed) */}
+      {loading && (
+        <div className="fixed inset-0 z-50 bg-slate-50 flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-150">
+          <div className="w-full max-w-xs bg-white rounded-3xl p-7 shadow-2xl border border-slate-200/90 flex flex-col items-center text-center space-y-4">
+            <div className="relative flex items-center justify-center">
+              <div className="absolute w-20 h-20 bg-emerald-500/10 rounded-full blur-xl animate-pulse" />
+              <div className="w-16 h-16 rounded-full border-3 border-emerald-100 border-t-emerald-600 animate-spin" />
+              <Lock className="w-6 h-6 text-emerald-600 absolute" />
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-base font-extrabold text-slate-900 tracking-tight">
+                {loadingStep || "Memproses..."}
+              </h3>
+              <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                {mode === "REGISTER"
+                  ? "Sedang menyiapkan database toko baru Anda..."
+                  : mode === "RESET"
+                  ? "Sedang memperbarui PIN keamanan toko..."
+                  : "Sedang membuka dashboard pembukuan..."}
+              </p>
+            </div>
+
+            {/* Clean Progress Indicator */}
+            <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+              <div className="h-full bg-emerald-600 rounded-full animate-pulse w-3/4 mx-auto" />
+            </div>
+
+            <p className="text-[11px] text-slate-400 font-mono">
+              Mohon tunggu sebentar...
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Top Header */}
       <div className="pt-4 sm:pt-6 flex flex-col items-center text-center space-y-2.5 w-full max-w-sm">
         <div className="w-13 h-13 rounded-2xl bg-amber-50 border border-amber-200/80 flex items-center justify-center text-amber-600 shadow-xs">
@@ -576,25 +611,7 @@ export default function LoginPage() {
 
       {/* Mode: LOGIN (Keypad 0-Latency) */}
       {mode === "LOGIN" && (
-        <div className="relative w-full max-w-[360px] sm:max-w-sm flex flex-col items-center space-y-3.5 my-auto py-1">
-          {/* Modern Loading Glassmorphic Overlay */}
-          {loading && (
-            <div className="absolute inset-0 bg-white/92 backdrop-blur-xs rounded-2xl flex flex-col items-center justify-center z-30 animate-in fade-in zoom-in-95 duration-150 p-6 text-center border border-slate-200/90 shadow-xl">
-              <div className="relative flex items-center justify-center mb-3">
-                <div className="w-14 h-14 rounded-full border-3 border-emerald-100 border-t-emerald-600 animate-spin" />
-                <Lock className="w-6 h-6 text-emerald-600 absolute" />
-              </div>
-              <p className="text-sm font-bold text-slate-900 tracking-tight">
-                {loadingStep || "Memeriksa Kredensial..."}
-              </p>
-              <p className="text-xs text-slate-500 mt-1">
-                Sedang memuat data toko Anda, mohon tunggu sebentar...
-              </p>
-              <div className="w-36 h-1.5 bg-slate-100 rounded-full mt-3 overflow-hidden">
-                <div className="w-full h-full bg-emerald-600 rounded-full animate-pulse" />
-              </div>
-            </div>
-          )}
+        <div className="w-full max-w-[360px] sm:max-w-sm flex flex-col items-center space-y-3.5 my-auto py-1">
           {/* Helper Guidance Callout */}
           <div className="w-full bg-blue-50/80 border border-blue-200/80 rounded-xl p-2.5 text-left space-y-0.5">
             <div className="flex items-center justify-between text-xs font-bold text-blue-900">
@@ -667,12 +684,7 @@ export default function LoginPage() {
 
           {/* Status / Message Display */}
           <div className="min-h-[28px] flex items-center justify-center text-center px-2">
-            {loading ? (
-              <p className="text-xs text-amber-600 font-semibold animate-pulse flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
-                Memeriksa keamanan akun...
-              </p>
-            ) : error ? (
+            {error ? (
               <p className="text-xs text-rose-600 font-semibold flex items-center justify-center gap-1 animate-in fade-in duration-200 leading-snug">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{error}</span>
