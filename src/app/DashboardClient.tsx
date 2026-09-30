@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { ExecutiveCard } from "@/components/dashboard/ExecutiveCards";
@@ -270,7 +270,7 @@ export function DashboardClient({ initialData, initialMetrics, tenant }: Dashboa
       fetch("/api/metrics")
         .then((r) => r.ok && r.json())
         .then((json) => json && setMetrics(json))
-        .catch(() => {});
+        .catch(() => { });
     } catch (e: any) {
       console.error(e);
       // Rollback on failure
@@ -302,6 +302,16 @@ export function DashboardClient({ initialData, initialMetrics, tenant }: Dashboa
     setCashInflowOpen(true);
   };
 
+  const [logoutLoading, setLogoutLoading] = useState(false);
+
+  useEffect(() => {
+    if (tenant) {
+      try {
+        localStorage.setItem("cached_tenant", JSON.stringify(tenant));
+      } catch { }
+    }
+  }, [tenant]);
+
   const handleRefresh = async () => {
     setLoading(true);
     await refreshData();
@@ -309,16 +319,46 @@ export function DashboardClient({ initialData, initialMetrics, tenant }: Dashboa
   };
 
   const handleLogout = async () => {
+    setLogoutLoading(true);
     try {
       await fetch("/api/auth/logout", { method: "POST" });
-      window.location.href = "/login";
-    } catch {
-      window.location.href = "/login";
-    }
+    } catch { }
+    window.location.href = "/login";
   };
 
   return (
     <div className="p-3 sm:p-6 pb-24 md:pb-6 space-y-4 sm:space-y-6 max-w-7xl mx-auto w-full max-w-full overflow-x-hidden">
+      {/* Full Clean Modern Logout Screen */}
+      {logoutLoading && (
+        <div className="fixed inset-0 z-50 bg-slate-50 flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-150">
+          <div className="w-full max-w-xs bg-white rounded-3xl p-7 shadow-2xl border border-slate-200/90 flex flex-col items-center text-center space-y-4">
+            <div className="relative flex items-center justify-center">
+              <div className="absolute w-20 h-20 bg-rose-500/10 rounded-full blur-xl animate-pulse" />
+              <div className="w-16 h-16 rounded-full border-3 border-rose-100 border-t-rose-600 animate-spin" />
+              <LogOut className="w-6 h-6 text-rose-600 absolute" />
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-base font-extrabold text-slate-900 tracking-tight">
+                Mengamankan Sesi Toko...
+              </h3>
+              <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                Menutup sesi aktif dan mengalihkan ke halaman masuk...
+              </p>
+            </div>
+
+            {/* Dynamic Sliding Progress Indicator */}
+            <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden relative shadow-inner">
+              <div className="h-full bg-gradient-to-r from-rose-500 via-rose-600 to-amber-500 rounded-full animate-progress-slide" />
+            </div>
+
+            <p className="text-[11px] text-slate-400 font-mono">
+              Mohon tunggu sebentar...
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* PWA Install Banner (Auto appears if installable on Android/Chrome) */}
       <InstallPrompt />
 
@@ -484,33 +524,30 @@ export function DashboardClient({ initialData, initialMetrics, tenant }: Dashboa
             <button
               onClick={() => setStatusFilter("ALL")}
               title="Tampilkan seluruh transaksi PO"
-              className={`flex items-center justify-center px-1.5 sm:px-3 py-2 rounded-lg sm:rounded-full font-bold transition-all text-xs sm:text-sm text-center truncate ${
-                statusFilter === "ALL"
+              className={`flex items-center justify-center px-1.5 sm:px-3 py-2 rounded-lg sm:rounded-full font-bold transition-all text-xs sm:text-sm text-center truncate ${statusFilter === "ALL"
                   ? "bg-slate-900 text-white shadow-xs"
                   : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
+                }`}
             >
               Semua ({countAll})
             </button>
             <button
               onClick={() => setStatusFilter("OUTSTANDING")}
               title="Pending: Belum ada pembayaran masuk sama sekali (Kas = Rp 0)"
-              className={`flex items-center justify-center px-1.5 sm:px-3 py-2 rounded-lg sm:rounded-full font-bold transition-all text-xs sm:text-sm text-center truncate ${
-                statusFilter === "OUTSTANDING"
+              className={`flex items-center justify-center px-1.5 sm:px-3 py-2 rounded-lg sm:rounded-full font-bold transition-all text-xs sm:text-sm text-center truncate ${statusFilter === "OUTSTANDING"
                   ? "bg-amber-600 text-white shadow-xs"
                   : "bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200"
-              }`}
+                }`}
             >
               Pending ({countOutstanding})
             </button>
             <button
               onClick={() => setStatusFilter("PARTIAL")}
               title="Partial: Pembayaran sudah dicicil sebagian, belum lunas"
-              className={`flex items-center justify-center px-1.5 sm:px-3 py-2 rounded-lg sm:rounded-full font-bold transition-all text-xs sm:text-sm text-center truncate ${
-                statusFilter === "PARTIAL"
+              className={`flex items-center justify-center px-1.5 sm:px-3 py-2 rounded-lg sm:rounded-full font-bold transition-all text-xs sm:text-sm text-center truncate ${statusFilter === "PARTIAL"
                   ? "bg-orange-600 text-white shadow-xs"
                   : "bg-orange-50 text-orange-800 hover:bg-orange-100 border border-orange-200"
-              }`}
+                }`}
             >
               <span className="sm:hidden">Partial ({countPartial})</span>
               <span className="hidden sm:inline">Partial / Cicil ({countPartial})</span>
@@ -518,11 +555,10 @@ export function DashboardClient({ initialData, initialMetrics, tenant }: Dashboa
             <button
               onClick={() => setStatusFilter("CLOSED")}
               title="Lunas: Pembayaran telah diterima 100% penuh"
-              className={`flex items-center justify-center px-1.5 sm:px-3 py-2 rounded-lg sm:rounded-full font-bold transition-all text-xs sm:text-sm text-center truncate ${
-                statusFilter === "CLOSED"
+              className={`flex items-center justify-center px-1.5 sm:px-3 py-2 rounded-lg sm:rounded-full font-bold transition-all text-xs sm:text-sm text-center truncate ${statusFilter === "CLOSED"
                   ? "bg-emerald-600 text-white shadow-xs"
                   : "bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200"
-              }`}
+                }`}
             >
               Lunas ({countClosed})
             </button>

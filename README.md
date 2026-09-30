@@ -30,16 +30,24 @@ Aplikasi manajemen **Purchase Order (PO)**, pembukuan **Kas Masuk**, monitoring 
    * Tampilan mobile responsif berskala A4 asli (`overflow-x-auto`) sehingga tata letak dokumen fisik tidak runtuh atau rusak saat dibuka dari HP.
 
 5. **Keamanan Akses Private (PIN 6-Digit & Keypad 0-Latency)**
-   * Login cepat menggunakan Username / No. HP + Keypad PIN angka 6-digit.
+   * Login cepat menggunakan Username / No. HP + Keypad PIN angka 6-digit dengan haptic feedback getaran taktil di HP.
+   * Full Clean Modern Loading Screen saat Login, Daftar Baru, dan Logout dengan indikator progress geser dinamis (*sliding progress bar*).
    * Mekanisme *Lupa PIN / Reset PIN* dengan Master Recovery Key (`sim2026`).
 
 6. **PWA (Progressive Web App) & Mobile First**
    * Menu navigasi bawah modern (*Bottom Navigation Bar*) untuk kenyamanan penggunaan di smartphone.
    * Tombol shortcut *Refresh* data 0-latency dengan sinkronisasi instan ke Neon PostgreSQL.
    * Banner instalasi cepat (*Add to Home Screen*) di perangkat Android/Chrome/iOS.
+   * Halaman Pengaturan Toko dengan **0ms Instant SSR Loading** (data langsung tampil tanpa jeda).
 
-7. **Export Laporan Excel Per-Tenant**
-   * Mengunduh rekapitulasi data PO dan kas milik usaha yang login ke format spreadsheet `.xlsx`.
+7. **In-App Lightbox Viewer Lampiran Struk & Bukti Transfer**
+   * Melihat foto bukti transfer dan struk modal keluar langsung di dalam aplikasi (in-modal) tanpa risiko layar blank hitam browser.
+   * Dilengkapi kontrol interaktif Zoom In, Zoom Out, Reset, tombol simpan/unduh berkas biner Blob, serta pratinjau dokumen PDF.
+
+8. **Export Laporan Excel Profesional Khusus Sembako**
+   * Mengunduh laporan rekapitulasi data PO dan kas milik usaha yang login ke format spreadsheet `.xlsx`.
+   * Format nama file profesional dinamis: `Laporan-PO-Kas-Sembako-[NamaUsaha]-[Tanggal].xlsx`.
+   * Rincian 4 worksheet terstruktur: *Rekap Harian Sembako, Rekap Bulanan Sembako, Piutang Modal Berjalan, dan Rincian Laba Sembako*.
 
 ---
 

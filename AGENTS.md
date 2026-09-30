@@ -73,6 +73,18 @@ File: [`src/app/po/[id]/print/page.tsx`](src/app/po/%5Bid%5D/print/page.tsx)
     * Tanda tangan 2 kolom: Penerima/Gudang dan Pimpinan Usaha Tenant.
   * Preview di layar sempit menggunakan kontainer `overflow-x-auto` berskala A4 asli (`w-[794px] max-w-[210mm]`).
 
+8. **In-App Lightbox Lampiran Struk (`ProofPreviewDialog.tsx`):**
+   * Mengatasi pemblokiran navigasi top-frame Chromium pada `data:` URL (`about:blank#blocked`).
+   * Mengonversi Base64 Data URL ke Blob URL biner untuk unduhan lokal aman dan pembukaan tab baru tanpa layar hitam.
+   * Mendukung pratinjau gambar dengan kontrol zoom in/out/reset dan iframe dokumen PDF.
+9. **Full Clean Loading & Indeterminate Progress (`animate-progress-slide`):**
+   * Transisi sesi pada Login, Pendaftaran, dan Logout menggunakan layar penuh `fixed inset-0 z-50 bg-slate-50` agar elemen di latar belakang (keypad/formulir) tidak membayang atau bertumpuk.
+   * Indikator progress menggunakan animasi CSS keyframe geser kontinu (*sliding left-to-right*).
+   * Pengalihan sesi autentikasi menggunakan `window.location.href` langsung untuk mencegah pending transition router Next.js.
+10. **0ms Instant SSR Data di Pengaturan Toko (`/settings`):**
+    * `SettingsPage` diimplementasikan sebagai Server Component yang memuat `initialTenant` langsung dari Prisma sebelum HTML dikirim ke browser.
+    * `SettingsClient` membaca `initialTenant` pada initial state React sehingga formulir langsung terisi sejak detik ke-0 tanpa efek kedip / teks melompat (*pop-in*).
+
 ---
 
 ## 🛡️ Panduan Perubahan Kode (Best Practices)
