@@ -26,6 +26,7 @@ import {
   Pencil,
   Trash2,
 } from "lucide-react";
+import { ProofPreviewDialog } from "./ProofPreviewDialog";
 
 interface PODetailDialogProps {
   open: boolean;
@@ -51,6 +52,11 @@ export function PODetailDialog({
   const { success: toastSuccess, error: toastError } = useToast();
   const [inflowToDelete, setInflowToDelete] = useState<any | null>(null);
   const [deleteInflowLoading, setDeleteInflowLoading] = useState(false);
+  const [previewProof, setPreviewProof] = useState<{
+    url: string;
+    title: string;
+    subtitle?: string;
+  } | null>(null);
 
   const fetchDetail = () => {
     if (poId) {
@@ -318,14 +324,19 @@ export function PODetailDialog({
                                 {cin.paymentMethod === "TRANSFER_BANK" ? "Transfer Bank" : "Tunai"}
                               </span>
                               {cin.proofFileUrl && (
-                                <a
-                                  href={cin.proofFileUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="inline-flex items-center gap-1 text-blue-600 font-semibold hover:underline"
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setPreviewProof({
+                                      url: cin.proofFileUrl,
+                                      title: "Bukti Kas Masuk",
+                                      subtitle: `${formatRupiah(cin.amount)} • ${formatDateIndo(cin.receivedDate)} (${cin.paymentMethod === "TRANSFER_BANK" ? "Transfer Bank" : "Tunai"})`,
+                                    })
+                                  }
+                                  className="inline-flex items-center gap-1 text-blue-600 font-semibold hover:underline cursor-pointer"
                                 >
                                   Bukti <ExternalLink className="h-3 w-3" />
-                                </a>
+                                </button>
                               )}
                             </div>
                             <Button
@@ -378,14 +389,19 @@ export function PODetailDialog({
                               <td className="px-3 py-2 text-slate-500 max-w-xs truncate">{cin.notes || "-"}</td>
                               <td className="px-3 py-2 text-center">
                                 {cin.proofFileUrl ? (
-                                  <a
-                                    href={cin.proofFileUrl}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="inline-flex items-center gap-1 text-[11px] text-blue-600 hover:underline"
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setPreviewProof({
+                                        url: cin.proofFileUrl,
+                                        title: "Bukti Kas Masuk",
+                                        subtitle: `${formatRupiah(cin.amount)} • ${formatDateIndo(cin.receivedDate)} (${cin.paymentMethod === "TRANSFER_BANK" ? "Transfer Bank" : "Tunai"})`,
+                                      })
+                                    }
+                                    className="inline-flex items-center gap-1 text-[11px] text-blue-600 hover:underline font-semibold cursor-pointer"
                                   >
                                     Lihat <ExternalLink className="h-3 w-3" />
-                                  </a>
+                                  </button>
                                 ) : (
                                   <span className="text-slate-400">-</span>
                                 )}
@@ -441,14 +457,19 @@ export function PODetailDialog({
                   <span className="text-[10px] font-bold text-slate-500 uppercase">Struk Modal Keluar</span>
                   <p>
                     {po.proofFileUrl ? (
-                      <a
-                        href={po.proofFileUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-blue-600 hover:underline font-medium"
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setPreviewProof({
+                            url: po.proofFileUrl,
+                            title: `Struk Modal Keluar - ${po.poNumber}`,
+                            subtitle: `Total Modal: ${formatRupiah(po.totalCost)} • Supplier: ${po.supplierName}`,
+                          })
+                        }
+                        className="inline-flex items-center gap-1 text-blue-600 hover:underline font-medium cursor-pointer"
                       >
                         <FileText className="h-3.5 w-3.5" /> Buka Lampiran Struk <ExternalLink className="h-3 w-3" />
-                      </a>
+                      </button>
                     ) : (
                       <span className="text-slate-400">Tidak ada lampiran</span>
                     )}
@@ -497,6 +518,14 @@ export function PODetailDialog({
         cancelLabel="Batal"
         isLoading={deleteInflowLoading}
         onConfirm={handleConfirmDeleteInflow}
+      />
+
+      <ProofPreviewDialog
+        open={!!previewProof}
+        onOpenChange={(val) => !val && setPreviewProof(null)}
+        fileUrl={previewProof?.url || null}
+        title={previewProof?.title || "Lampiran Bukti Transaksi"}
+        subtitle={previewProof?.subtitle}
       />
     </>
   );
