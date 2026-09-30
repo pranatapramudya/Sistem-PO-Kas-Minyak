@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
       { wch: 18 },  // Laba Bersih
       { wch: 15 },  // Status
     ];
-    XLSX.utils.book_append_sheet(wb, ws1, "Rekap Harian");
+    XLSX.utils.book_append_sheet(wb, ws1, "Rekap Harian Sembako");
 
     // Sheet 2: Rekap Bulanan (group by month)
     const monthlyMap = new Map<string, typeof dailyData>();
@@ -117,13 +117,12 @@ export async function GET(request: NextRequest) {
 
     const ws2 = XLSX.utils.json_to_sheet(monthlyData);
     ws2["!cols"] = ws1["!cols"];
-    XLSX.utils.book_append_sheet(wb, ws2, "Rekap Bulanan");
+    XLSX.utils.book_append_sheet(wb, ws2, "Rekap Bulanan Sembako");
 
     // Sheet 3: Outstanding Only
     const outstandingPOs = filteredPOs.filter((p) => p.status !== "CLOSED");
     const outstandingData = outstandingPOs.map((po, idx) => {
       const totalCashInflow = po.cashInflow.reduce((sum, c) => sum + c.amount, 0);
-      const profit = totalCashInflow - po.totalCost;
       const remaining = po.totalCost - totalCashInflow;
       const itemSummary = po.items.map((i) => `${i.itemName} (${i.qty} ${i.unit})`).join(", ");
 
@@ -145,7 +144,7 @@ export async function GET(request: NextRequest) {
       { wch: 5 }, { wch: 15 }, { wch: 20 }, { wch: 25 }, { wch: 40 },
       { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 15 },
     ];
-    XLSX.utils.book_append_sheet(wb, ws3, "Outstanding");
+    XLSX.utils.book_append_sheet(wb, ws3, "Piutang Modal Berjalan");
 
     // Sheet 4: Laba Detail
     const profitData = filteredPOs.map((po, idx) => {
@@ -173,12 +172,24 @@ export async function GET(request: NextRequest) {
       { wch: 5 }, { wch: 15 }, { wch: 20 }, { wch: 25 }, { wch: 40 },
       { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 15 }, { wch: 18 }, { wch: 18 },
     ];
-    XLSX.utils.book_append_sheet(wb, ws4, "Laba Detail");
+    XLSX.utils.book_append_sheet(wb, ws4, "Rincian Laba Sembako");
 
     // Generate buffer
     const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
 
-    const filename = `Rekap-Trading-${new Date().toISOString().split("T")[0]}.xlsx`;
+    // Fetch tenant name for professional dynamic filename
+    const tenant = await prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { companyName: true },
+    });
+
+    const companySlug = (tenant?.companyName || "Sembako")
+      .replace(/[^a-zA-Z0-9]/g, "_")
+      .replace(/_+/g, "_")
+      .slice(0, 30);
+
+    const dateStr = new Date().toISOString().split("T")[0];
+    const filename = `Laporan-PO-Kas-Sembako-${companySlug}-${dateStr}.xlsx`;
 
     return new NextResponse(buf, {
       headers: {

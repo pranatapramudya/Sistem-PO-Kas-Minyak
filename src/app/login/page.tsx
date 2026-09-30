@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, Delete, AlertCircle, KeyRound, ArrowLeft, CheckCircle2, Building, UserPlus, LogIn } from "lucide-react";
+import { Lock, Delete, AlertCircle, KeyRound, ArrowLeft, CheckCircle2, Building, UserPlus, LogIn, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -30,12 +30,18 @@ export default function LoginPage() {
   const [newPin, setNewPin] = useState("");
 
   const [loading, setLoading] = useState(false);
+  const [loadingStep, setLoadingStep] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [isShaking, setIsShaking] = useState(false);
 
-  // Load last used identifier from localStorage
+  // Load last used identifier from localStorage & prefetch dashboard
   useEffect(() => {
+    // Warm up the dashboard chunk for instant navigation
+    try {
+      router.prefetch("/");
+    } catch {}
+
     try {
       const saved = localStorage.getItem("last_identifier");
       if (saved) {
@@ -46,7 +52,7 @@ export default function LoginPage() {
     } catch {
       setIdentifier("admin");
     }
-  }, []);
+  }, [router]);
 
   const triggerShake = (errMsg: string) => {
     setError(errMsg);
@@ -55,8 +61,17 @@ export default function LoginPage() {
     setPin("");
   };
 
+  const playHaptic = () => {
+    if (typeof window !== "undefined" && "vibrate" in navigator) {
+      try {
+        navigator.vibrate(10);
+      } catch {}
+    }
+  };
+
   const handleKeyPress = (num: string) => {
     if (loading) return;
+    playHaptic();
     if (pin.length < 6) {
       const nextPin = pin + num;
       setPin(nextPin);
@@ -82,6 +97,7 @@ export default function LoginPage() {
   // Submit Login
   const submitLogin = async (idToSubmit: string, pinToSubmit: string) => {
     setLoading(true);
+    setLoadingStep("Memeriksa kredensial...");
     setError(null);
 
     try {
@@ -105,11 +121,11 @@ export default function LoginPage() {
         localStorage.setItem("last_identifier", idToSubmit.trim() || "admin");
       } catch {}
 
+      setLoadingStep("Membuka dashboard toko...");
       router.replace("/");
       router.refresh();
     } catch (err: any) {
       triggerShake(err.message || "Login gagal. Periksa username dan PIN Anda.");
-    } finally {
       setLoading(false);
     }
   };
@@ -135,6 +151,7 @@ export default function LoginPage() {
     }
 
     setLoading(true);
+    setLoadingStep("Mendaftarkan toko baru...");
     setError(null);
 
     try {
@@ -158,14 +175,14 @@ export default function LoginPage() {
         localStorage.setItem("last_identifier", regIdentifier.trim());
       } catch {}
 
+      setLoadingStep("Menyiapkan dashboard toko...");
       setSuccessMsg("Pendaftaran berhasil! Mengalihkan ke dashboard...");
       setTimeout(() => {
         router.replace("/");
         router.refresh();
-      }, 700);
+      }, 500);
     } catch (err: any) {
       setError(err.message || "Gagal mendaftar.");
-    } finally {
       setLoading(false);
     }
   };
@@ -416,9 +433,16 @@ export default function LoginPage() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-11 font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs mt-2"
+              className="w-full h-11 font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs mt-2 relative overflow-hidden transition-all duration-100 cursor-pointer"
             >
-              {loading ? "Mendaftarkan Usaha..." : "Daftar & Buka Aplikasi"}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-white" />
+                  {loadingStep || "Mendaftarkan Usaha..."}
+                </span>
+              ) : (
+                "Daftar & Buka Aplikasi"
+              )}
             </Button>
           </form>
 
@@ -518,9 +542,16 @@ export default function LoginPage() {
             <Button
               type="submit"
               disabled={loading || newPin.length !== 6 || !recoveryKey.trim()}
-              className="w-full h-11 font-bold bg-amber-600 hover:bg-amber-700 text-white shadow-xs mt-2"
+              className="w-full h-11 font-bold bg-amber-600 hover:bg-amber-700 text-white shadow-xs mt-2 transition-all duration-100 cursor-pointer"
             >
-              {loading ? "Menyimpan PIN Baru..." : "Simpan PIN & Masuk"}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-white" />
+                  Menyimpan PIN Baru...
+                </span>
+              ) : (
+                "Simpan PIN & Masuk"
+              )}
             </Button>
           </form>
 
@@ -545,7 +576,25 @@ export default function LoginPage() {
 
       {/* Mode: LOGIN (Keypad 0-Latency) */}
       {mode === "LOGIN" && (
-        <div className="w-full max-w-[360px] sm:max-w-sm flex flex-col items-center space-y-3.5 my-auto py-1">
+        <div className="relative w-full max-w-[360px] sm:max-w-sm flex flex-col items-center space-y-3.5 my-auto py-1">
+          {/* Modern Loading Glassmorphic Overlay */}
+          {loading && (
+            <div className="absolute inset-0 bg-white/92 backdrop-blur-xs rounded-2xl flex flex-col items-center justify-center z-30 animate-in fade-in zoom-in-95 duration-150 p-6 text-center border border-slate-200/90 shadow-xl">
+              <div className="relative flex items-center justify-center mb-3">
+                <div className="w-14 h-14 rounded-full border-3 border-emerald-100 border-t-emerald-600 animate-spin" />
+                <Lock className="w-6 h-6 text-emerald-600 absolute" />
+              </div>
+              <p className="text-sm font-bold text-slate-900 tracking-tight">
+                {loadingStep || "Memeriksa Kredensial..."}
+              </p>
+              <p className="text-xs text-slate-500 mt-1">
+                Sedang memuat data toko Anda, mohon tunggu sebentar...
+              </p>
+              <div className="w-36 h-1.5 bg-slate-100 rounded-full mt-3 overflow-hidden">
+                <div className="w-full h-full bg-emerald-600 rounded-full animate-pulse" />
+              </div>
+            </div>
+          )}
           {/* Helper Guidance Callout */}
           <div className="w-full bg-blue-50/80 border border-blue-200/80 rounded-xl p-2.5 text-left space-y-0.5">
             <div className="flex items-center justify-between text-xs font-bold text-blue-900">
@@ -635,7 +684,7 @@ export default function LoginPage() {
             )}
           </div>
 
-          {/* Numeric Keypad Grid (Besar & Jelas di HP) */}
+          {/* Numeric Keypad Grid (Besar & Jelas di HP, 0-Latency Feedback) */}
           <div className="grid grid-cols-3 gap-2.5 sm:gap-3.5 w-full">
             {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((num) => (
               <button
@@ -643,7 +692,7 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => handleKeyPress(num)}
                 disabled={loading}
-                className="h-14 sm:h-16 rounded-2xl bg-white hover:bg-slate-100 active:bg-slate-900 active:text-white border-2 border-slate-200/90 text-2xl sm:text-3xl font-extrabold font-mono text-slate-900 transition-all active:scale-95 flex items-center justify-center shadow-xs disabled:opacity-50 touch-manipulation cursor-pointer"
+                className="h-14 sm:h-16 rounded-2xl bg-white hover:bg-slate-50 active:bg-slate-900 active:text-white border-2 border-slate-200/90 text-2xl sm:text-3xl font-extrabold font-mono text-slate-900 transition-all duration-75 active:scale-95 flex items-center justify-center shadow-xs disabled:opacity-50 touch-manipulation cursor-pointer select-none"
               >
                 {num}
               </button>
@@ -652,9 +701,12 @@ export default function LoginPage() {
             {/* Bottom Row */}
             <button
               type="button"
-              onClick={handleClear}
+              onClick={() => {
+                playHaptic();
+                handleClear();
+              }}
               disabled={loading || pin.length === 0}
-              className="h-14 sm:h-16 rounded-2xl text-xs sm:text-sm font-black text-rose-600 bg-rose-50/70 hover:bg-rose-100 active:scale-95 border border-rose-200/80 transition-all flex items-center justify-center disabled:opacity-30 touch-manipulation cursor-pointer shadow-2xs"
+              className="h-14 sm:h-16 rounded-2xl text-xs sm:text-sm font-black text-rose-600 bg-rose-50/70 hover:bg-rose-100 active:bg-rose-200 active:scale-95 border border-rose-200/80 transition-all duration-75 flex items-center justify-center disabled:opacity-30 touch-manipulation cursor-pointer shadow-2xs select-none"
             >
               HAPUS
             </button>
@@ -663,16 +715,19 @@ export default function LoginPage() {
               type="button"
               onClick={() => handleKeyPress("0")}
               disabled={loading}
-              className="h-14 sm:h-16 rounded-2xl bg-white hover:bg-slate-100 active:bg-slate-900 active:text-white border-2 border-slate-200/90 text-2xl sm:text-3xl font-extrabold font-mono text-slate-900 transition-all active:scale-95 flex items-center justify-center shadow-xs disabled:opacity-50 touch-manipulation cursor-pointer"
+              className="h-14 sm:h-16 rounded-2xl bg-white hover:bg-slate-50 active:bg-slate-900 active:text-white border-2 border-slate-200/90 text-2xl sm:text-3xl font-extrabold font-mono text-slate-900 transition-all duration-75 active:scale-95 flex items-center justify-center shadow-xs disabled:opacity-50 touch-manipulation cursor-pointer select-none"
             >
               0
             </button>
 
             <button
               type="button"
-              onClick={handleDelete}
+              onClick={() => {
+                playHaptic();
+                handleDelete();
+              }}
               disabled={loading || pin.length === 0}
-              className="h-14 sm:h-16 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 hover:text-slate-900 transition-all flex items-center justify-center disabled:opacity-30 touch-manipulation cursor-pointer border border-slate-200 shadow-2xs"
+              className="h-14 sm:h-16 rounded-2xl bg-slate-100 hover:bg-slate-200 active:bg-slate-300 active:scale-95 text-slate-700 hover:text-slate-900 transition-all duration-75 flex items-center justify-center disabled:opacity-30 touch-manipulation cursor-pointer border border-slate-200 shadow-2xs select-none"
               title="Hapus Satu Digit"
             >
               <Delete className="w-6 h-6 stroke-[2.2]" />
