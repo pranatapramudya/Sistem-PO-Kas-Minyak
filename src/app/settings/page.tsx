@@ -21,6 +21,7 @@ export default async function SettingsPage() {
       phone: true,
       address: true,
       npwp: true,
+      tagline: true,
     },
   });
 
