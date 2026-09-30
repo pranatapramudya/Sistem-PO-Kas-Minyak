@@ -71,7 +71,7 @@ export default async function POPrintPage({ params }: POPrintPageProps) {
                 {appName}
               </div>
               <div className="text-[11px] font-bold text-slate-700 tracking-wider uppercase mt-0.5">
-                {po.tenant?.ownerName ? `Pimpinan: ${po.tenant.ownerName}` : "Perusahaan Perdagangan & Jasa"}
+                {po.tenant?.tagline ? po.tenant.tagline : po.tenant?.ownerName ? `Pimpinan: ${po.tenant.ownerName}` : "Perusahaan Perdagangan & Jasa"}
               </div>
               <div className="text-[11px] text-slate-600 mt-1 leading-normal">
                 {appAddress}
@@ -106,7 +106,7 @@ export default async function POPrintPage({ params }: POPrintPageProps) {
               </div>
               <div className="p-3 space-y-1">
                 <div className="font-bold text-slate-950 text-sm">{po.supplierName}</div>
-                <div className="text-slate-600">Perihal: Pengadaan Stok Barang</div>
+                <div className="text-slate-600">Perihal: {po.subject || "Pengadaan Stok Barang"}</div>
                 <div className="text-slate-500 text-[11px]">Tujuan Pengiriman: Gudang Utama</div>
               </div>
             </div>

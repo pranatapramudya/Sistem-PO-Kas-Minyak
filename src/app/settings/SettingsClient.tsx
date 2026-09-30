@@ -20,9 +20,10 @@ interface TenantSettingsData {
 
 interface SettingsClientProps {
   initialTenant: TenantSettingsData | null;
+  tagline?: string;
 }
 
-export function SettingsClient({ initialTenant }: SettingsClientProps) {
+export function SettingsClient({ initialTenant }: { initialTenant: SettingsClientProps | null }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -33,8 +34,9 @@ export function SettingsClient({ initialTenant }: SettingsClientProps) {
   const [ownerName, setOwnerName] = useState(initialTenant?.ownerName || "");
   const [identifier, setIdentifier] = useState(initialTenant?.identifier || "");
   const [appAddress, setAppAddress] = useState(initialTenant?.address || "");
-  const [appPhone, setAppPhone] = useState(initialTenant?.phone || "");
+  const [phone, setPhone] = useState(initialTenant?.phone || "");
   const [npwp, setNpwp] = useState(initialTenant?.npwp || "");
+  const [tagline, setTagline] = useState(initialTenant?.tagline || "");
   const [newPin, setNewPin] = useState("");
 
   useEffect(() => {
@@ -63,8 +65,9 @@ export function SettingsClient({ initialTenant }: SettingsClientProps) {
             setOwnerName(data.ownerName || "");
             setIdentifier(data.identifier || "");
             setAppAddress(data.address || "");
-            setAppPhone(data.phone || "");
+            setPhone(data.phone || "");
             setNpwp(data.npwp || "");
+            setTagline(data.tagline || "");
           }
         })
         .catch((e) => console.error("Failed to load tenant fallback:", e));
@@ -99,8 +102,9 @@ export function SettingsClient({ initialTenant }: SettingsClientProps) {
         companyName,
         ownerName,
         address: appAddress,
-        phone: appPhone,
+        phone,
         npwp,
+        tagline,
       };
       if (newPin) {
         payload.newPin = newPin;
@@ -248,8 +252,8 @@ export function SettingsClient({ initialTenant }: SettingsClientProps) {
                 <Input
                   id="appPhone"
                   placeholder="Contoh: 0812-3456-7890"
-                  value={appPhone}
-                  onChange={(e) => setAppPhone(e.target.value)}
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
                   className="h-10 text-sm font-medium"
                 />
               </div>
@@ -263,6 +267,19 @@ export function SettingsClient({ initialTenant }: SettingsClientProps) {
                   placeholder="00.000.000.0-000.000"
                   value={npwp}
                   onChange={(e) => setNpwp(e.target.value)}
+                  className="h-10 text-sm font-medium"
+                />
+              </div>
+              
+              <div className="space-y-1.5 md:col-span-2">
+                <Label htmlFor="tagline" className="text-xs font-bold text-slate-700">
+                  Slogan / Sub-judul Kop Surat
+                </Label>
+                <Input
+                  id="tagline"
+                  placeholder="Contoh: Trading & Distribusi (Retail & Grosir)"
+                  value={tagline}
+                  onChange={(e) => setTagline(e.target.value)}
                   className="h-10 text-sm font-medium"
                 />
               </div>

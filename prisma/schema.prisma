@@ -15,6 +15,7 @@ model Tenant {
   address        String?
   phone          String?
   npwp           String?
+  tagline        String?         // Deskripsi/Slogan Usaha
   pinHash        String
   recoveryKey    String          @default("sim2026")
   createdAt      DateTime        @default(now())
@@ -31,6 +32,7 @@ model PurchaseOrder {
   poNumber        String
   date            DateTime
   supplierName    String
+  subject         String?      // Perihal PO
   status          String       @default("OUTSTANDING") // OUTSTANDING, PARTIAL, CLOSED
   totalCost       Float        @default(0)
   expectedRevenue Float        @default(0)

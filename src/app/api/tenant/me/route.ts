@@ -53,6 +53,9 @@ export async function PUT(request: NextRequest) {
     if (typeof body.npwp === "string") {
       updateData.npwp = body.npwp.trim() || null;
     }
+    if (typeof body.tagline === "string") {
+      updateData.tagline = body.tagline.trim() || null;
+    }
     if (typeof body.newPin === "string" && body.newPin.length === 6 && /^\d{6}$/.test(body.newPin)) {
       updateData.pinHash = await hashPIN(body.newPin);
     }
