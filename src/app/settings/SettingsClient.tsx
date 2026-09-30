@@ -16,6 +16,7 @@ interface TenantSettingsData {
   phone: string | null;
   address: string | null;
   npwp: string | null;
+  tagline?: string | null;
 }
 
 interface SettingsClientProps {
@@ -23,7 +24,7 @@ interface SettingsClientProps {
   tagline?: string;
 }
 
-export function SettingsClient({ initialTenant }: { initialTenant: SettingsClientProps | null }) {
+export function SettingsClient({ initialTenant }: { initialTenant: TenantSettingsData | null }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
