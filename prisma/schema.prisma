@@ -32,7 +32,8 @@ model PurchaseOrder {
   poNumber        String
   date            DateTime
   supplierName    String
-  subject         String?      // Perihal PO
+  subject         String?      @default("Pengadaan Stok Barang") // Perihal PO
+  deliveryTarget  String?      @default("Gudang Utama") // Tujuan Pengiriman
   status          String       @default("OUTSTANDING") // OUTSTANDING, PARTIAL, CLOSED
   totalCost       Float        @default(0)
   expectedRevenue Float        @default(0)

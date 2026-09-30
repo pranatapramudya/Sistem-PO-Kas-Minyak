@@ -52,6 +52,8 @@ export type OrderItemInput = z.infer<typeof orderItemSchema>;
 export const createPOSchema = z.object({
   date: z.string().min(1, "Tanggal PO wajib diisi"),
   supplierName: z.string().min(1, "Nama supplier wajib diisi").max(100),
+  subject: z.string().optional(),
+  deliveryTarget: z.string().optional(),
   items: z.array(orderItemSchema).min(1, "Minimal 1 item barang"),
   expectedRevenue: z.coerce.number().min(0).optional().default(0),
   notes: z.string().max(500).optional(),

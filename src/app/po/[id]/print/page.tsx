@@ -107,7 +107,7 @@ export default async function POPrintPage({ params }: POPrintPageProps) {
               <div className="p-3 space-y-1">
                 <div className="font-bold text-slate-950 text-sm">{po.supplierName}</div>
                 <div className="text-slate-600">Perihal: {po.subject || "Pengadaan Stok Barang"}</div>
-                <div className="text-slate-500 text-[11px]">Tujuan Pengiriman: Gudang Utama</div>
+                <div className="text-slate-500 text-[11px]">Tujuan Pengiriman: {po.deliveryTarget || "Gudang Utama"}</div>
               </div>
             </div>
 

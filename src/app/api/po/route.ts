@@ -55,6 +55,8 @@ export async function POST(request: NextRequest) {
 
     const date = formData.get("date") as string;
     const supplierName = formData.get("supplierName") as string;
+    const subject = formData.get("subject") as string | null;
+    const deliveryTarget = formData.get("deliveryTarget") as string | null;
     const itemsJson = formData.get("items") as string;
     const expectedRevenue = parseFloat(formData.get("expectedRevenue") as string) || 0;
     const notes = (formData.get("notes") as string) || "";
@@ -133,6 +135,8 @@ export async function POST(request: NextRequest) {
         poNumber,
         date: new Date(date),
         supplierName,
+        subject: subject || "Pengadaan Stok Barang",
+        deliveryTarget: deliveryTarget || "Gudang Utama",
         totalCost,
         expectedRevenue,
         proofFileUrl,

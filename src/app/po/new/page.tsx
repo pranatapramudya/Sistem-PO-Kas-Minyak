@@ -117,6 +117,40 @@ export default function NewPOPage() {
                 />
               </div>
             </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="subject">Perihal PO (Opsional)</Label>
+                <Controller
+                  name="subject"
+                  control={form.control}
+                  render={({ field }) => (
+                    <Input
+                      id="subject"
+                      placeholder="Contoh: Pengadaan Stok Barang"
+                      {...field}
+                      value={field.value || ""}
+                    />
+                  )}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="deliveryTarget">Tujuan Pengiriman (Opsional)</Label>
+                <Controller
+                  name="deliveryTarget"
+                  control={form.control}
+                  render={({ field }) => (
+                    <Input
+                      id="deliveryTarget"
+                      placeholder="Contoh: Gudang Utama"
+                      {...field}
+                      value={field.value || ""}
+                    />
+                  )}
+                />
+              </div>
+            </div>
           </CardContent>
         </Card>
 

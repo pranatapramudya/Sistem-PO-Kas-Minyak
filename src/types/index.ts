@@ -67,6 +67,8 @@ export interface Settings {
 export interface POFormData {
   date: string;
   supplierName: string;
+  subject?: string;
+  deliveryTarget?: string;
   items: {
     itemName: string;
     qty: number;
@@ -75,7 +77,7 @@ export interface POFormData {
   }[];
   expectedRevenue: number;
   notes: string;
-  proofFile: File | null;
+  proofFile?: File | null;
 }
 
 export interface CashInflowFormData {

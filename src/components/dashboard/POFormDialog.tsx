@@ -162,6 +162,46 @@ export function POFormDialog({ open, onOpenChange, onSubmit, editData, loading }
             </div>
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="subject" className="text-xs sm:text-sm font-semibold text-slate-700">
+                Perihal PO (Opsional)
+              </Label>
+              <Controller
+                name="subject"
+                control={form.control}
+                render={({ field }) => (
+                  <Input
+                    id="subject"
+                    placeholder="Contoh: Pengadaan Stok Barang"
+                    className="text-xs sm:text-sm h-9 sm:h-10 bg-white border-slate-200"
+                    {...field}
+                    value={field.value || ""}
+                  />
+                )}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="deliveryTarget" className="text-xs sm:text-sm font-semibold text-slate-700">
+                Tujuan Pengiriman (Opsional)
+              </Label>
+              <Controller
+                name="deliveryTarget"
+                control={form.control}
+                render={({ field }) => (
+                  <Input
+                    id="deliveryTarget"
+                    placeholder="Contoh: Gudang Utama"
+                    className="text-xs sm:text-sm h-9 sm:h-10 bg-white border-slate-200"
+                    {...field}
+                    value={field.value || ""}
+                  />
+                )}
+              />
+            </div>
+          </div>
+
           {/* Items Card */}
           <Card className="border border-slate-200 shadow-none bg-slate-50/60">
             <CardHeader className="py-2.5 px-3 sm:px-4 flex flex-row items-center justify-between border-b border-slate-200/80 bg-slate-100/70">
