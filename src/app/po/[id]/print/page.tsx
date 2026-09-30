@@ -30,10 +30,10 @@ export default async function POPrintPage({ params }: POPrintPageProps) {
     );
   }
 
-  const appName = po.tenant?.companyName || process.env.APP_NAME || "CV. TRADING MINYAK";
-  const appAddress = po.tenant?.address || process.env.APP_ADDRESS || "Jl. Raya Utama No. 123, Jakarta Selatan";
-  const appPhone = po.tenant?.phone || process.env.APP_PHONE || "0812-3456-7890";
-  const npwp = po.tenant?.npwp || process.env.NPWP || "00.000.000.0-000.000";
+  const appName = po.tenant?.companyName || process.env.APP_NAME || "NAMA PERUSAHAAN";
+  const appAddress = po.tenant?.address || process.env.APP_ADDRESS || "Alamat Perusahaan Belum Diatur";
+  const appPhone = po.tenant?.phone || process.env.APP_PHONE || "-";
+  const npwp = po.tenant?.npwp || process.env.NPWP || "-";
 
   const statusLabel =
     po.status === "CLOSED" ? "LUNAS / SELESAI" : po.status === "PARTIAL" ? "SEBAGIAN (PARTIAL)" : "PENDING (BELUM LUNAS)";
@@ -71,7 +71,7 @@ export default async function POPrintPage({ params }: POPrintPageProps) {
                 {appName}
               </div>
               <div className="text-[11px] font-bold text-slate-700 tracking-wider uppercase mt-0.5">
-                Trading &amp; Distribusi Minyak Goreng (Retail &amp; Grosir)
+                {po.tenant?.ownerName ? `Pimpinan: ${po.tenant.ownerName}` : "Perusahaan Perdagangan & Jasa"}
               </div>
               <div className="text-[11px] text-slate-600 mt-1 leading-normal">
                 {appAddress}
@@ -106,8 +106,8 @@ export default async function POPrintPage({ params }: POPrintPageProps) {
               </div>
               <div className="p-3 space-y-1">
                 <div className="font-bold text-slate-950 text-sm">{po.supplierName}</div>
-                <div className="text-slate-600">Perihal: Pengadaan Stok Minyak Goreng</div>
-                <div className="text-slate-500 text-[11px]">Tujuan Pengiriman: Gudang Utama &amp; Transit Logistik</div>
+                <div className="text-slate-600">Perihal: Pengadaan Stok Barang</div>
+                <div className="text-slate-500 text-[11px]">Tujuan Pengiriman: Gudang Utama</div>
               </div>
             </div>
 
@@ -188,8 +188,8 @@ export default async function POPrintPage({ params }: POPrintPageProps) {
           {/* Box Terbilang */}
           <div className="border border-slate-300 bg-slate-50/80 p-2.5 rounded-xs mb-4 flex items-baseline gap-2 text-xs">
             <span className="font-bold text-slate-700 uppercase tracking-wide shrink-0">TERBILANG :</span>
-            <span className="font-bold italic text-slate-950 uppercase tracking-wide">
-              # {terbilang(po.totalCost)} #
+            <span className="font-bold italic text-slate-950 capitalize tracking-wide">
+              {terbilang(po.totalCost)}
             </span>
           </div>
 
