@@ -122,8 +122,7 @@ export default function LoginPage() {
       } catch {}
 
       setLoadingStep("Membuka dashboard toko...");
-      router.replace("/");
-      router.refresh();
+      window.location.href = "/";
     } catch (err: any) {
       triggerShake(err.message || "Login gagal. Periksa username dan PIN Anda.");
       setLoading(false);
@@ -175,12 +174,9 @@ export default function LoginPage() {
         localStorage.setItem("last_identifier", regIdentifier.trim());
       } catch {}
 
-      setLoadingStep("Menyiapkan dashboard toko...");
+      setLoadingStep("Membuka dashboard toko...");
       setSuccessMsg("Pendaftaran berhasil! Mengalihkan ke dashboard...");
-      setTimeout(() => {
-        router.replace("/");
-        router.refresh();
-      }, 500);
+      window.location.href = "/";
     } catch (err: any) {
       setError(err.message || "Gagal mendaftar.");
       setLoading(false);
@@ -226,14 +222,11 @@ export default function LoginPage() {
         localStorage.setItem("last_identifier", resetIdentifier.trim());
       } catch {}
 
+      setLoadingStep("Membuka dashboard toko...");
       setSuccessMsg("PIN berhasil diperbarui! Mengalihkan ke dashboard...");
-      setTimeout(() => {
-        router.replace("/");
-        router.refresh();
-      }, 700);
+      window.location.href = "/";
     } catch (err: any) {
       setError(err.message || "Gagal mengatur ulang PIN.");
-    } finally {
       setLoading(false);
     }
   };
@@ -284,9 +277,9 @@ export default function LoginPage() {
               </p>
             </div>
 
-            {/* Clean Progress Indicator */}
-            <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-              <div className="h-full bg-emerald-600 rounded-full animate-pulse w-3/4 mx-auto" />
+            {/* Dynamic Sliding Progress Indicator (Bergerak Halus ke Kanan) */}
+            <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden relative shadow-inner">
+              <div className="h-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-400 rounded-full animate-progress-slide" />
             </div>
 
             <p className="text-[11px] text-slate-400 font-mono">

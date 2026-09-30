@@ -5,7 +5,7 @@ import { COOKIE_NAME, getSessionData, DEFAULT_TENANT_ID, getTenantById } from "@
 
 export const dynamic = "force-dynamic";
 
-async function getDashboardData(tenantId: string) {
+async function getDashboardDataAndMetrics(tenantId: string) {
   const pos = await prisma.purchaseOrder.findMany({
     where: { tenantId },
     include: {
@@ -15,7 +15,22 @@ async function getDashboardData(tenantId: string) {
     orderBy: { date: "desc" },
   });
 
-  return pos.map((po) => {
+  const now = new Date();
+  const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const outstandingPOs = pos.filter((p) => p.status !== "CLOSED");
+  const totalOutstandingModal = outstandingPOs.reduce((sum, p) => sum + p.totalCost, 0);
+  const totalOutstandingReceivables = outstandingPOs.reduce(
+    (sum, p) => sum + Math.max(0, p.totalCost - p.cashInflow.reduce((s, c) => s + c.amount, 0)),
+    0
+  );
+  const closedPOs = pos.filter((p) => p.status === "CLOSED");
+  const monthlyProfit = closedPOs
+    .filter((p) => p.cashInflow.some((c) => new Date(c.receivedDate) >= thisMonthStart))
+    .reduce((sum, p) => sum + p.cashInflow.reduce((s, c) => s + c.amount, 0) - p.totalCost, 0);
+  const closedPOCount = closedPOs.length;
+
+  const data = pos.map((po) => {
     const totalCashInflow = po.cashInflow.reduce((sum, c) => sum + c.amount, 0);
     const profit = totalCashInflow - po.totalCost;
     const itemSummary = po.items.map((i) => `${i.itemName} (${i.qty} ${i.unit})`).join(", ");
@@ -37,34 +52,15 @@ async function getDashboardData(tenantId: string) {
       })),
     };
   });
-}
-
-async function getMetrics(tenantId: string) {
-  const pos = await prisma.purchaseOrder.findMany({
-    where: { tenantId },
-    include: { cashInflow: true },
-  });
-
-  const now = new Date();
-  const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-
-  const outstandingPOs = pos.filter((p) => p.status !== "CLOSED");
-  const totalOutstandingModal = outstandingPOs.reduce((sum, p) => sum + p.totalCost, 0);
-  const totalOutstandingReceivables = outstandingPOs.reduce(
-    (sum, p) => sum + Math.max(0, p.totalCost - p.cashInflow.reduce((s, c) => s + c.amount, 0)),
-    0
-  );
-  const closedPOs = pos.filter((p) => p.status === "CLOSED");
-  const monthlyProfit = closedPOs
-    .filter((p) => p.cashInflow.some((c) => new Date(c.receivedDate) >= thisMonthStart))
-    .reduce((sum, p) => sum + p.cashInflow.reduce((s, c) => s + c.amount, 0) - p.totalCost, 0);
-  const closedPOCount = closedPOs.length;
 
   return {
-    activeCapital: totalOutstandingModal,
-    outstandingReceivables: totalOutstandingReceivables,
-    monthlyProfit,
-    closedPOCount,
+    data,
+    metrics: {
+      activeCapital: totalOutstandingModal,
+      outstandingReceivables: totalOutstandingReceivables,
+      monthlyProfit,
+      closedPOCount,
+    },
   };
 }
 
@@ -74,9 +70,8 @@ export default async function Page() {
   const session = await getSessionData(sessionToken);
   const tenantId = session.valid && session.tenantId ? session.tenantId : DEFAULT_TENANT_ID;
 
-  const [data, metrics, tenant] = await Promise.all([
-    getDashboardData(tenantId),
-    getMetrics(tenantId),
+  const [{ data, metrics }, tenant] = await Promise.all([
+    getDashboardDataAndMetrics(tenantId),
     getTenantById(tenantId),
   ]);
 

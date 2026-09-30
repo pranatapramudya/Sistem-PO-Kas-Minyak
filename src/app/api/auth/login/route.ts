@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authenticateTenant, findTenantByIdentifier, createSessionToken, COOKIE_NAME, DEFAULT_TENANT_ID } from "@/lib/auth";
+import { authenticateTenant, findTenantByIdentifier, createSessionToken, COOKIE_NAME, DEFAULT_TENANT_ID, hashPIN } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
@@ -13,45 +13,38 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "PIN wajib diisi" }, { status: 400 });
     }
 
-    let tenant = null;
+    let tenant: any = null;
+    const targetId = identifier.trim() || "admin";
+    const existing = await findTenantByIdentifier(targetId);
 
-    if (identifier) {
-      // Check if account exists first
-      const existing = await findTenantByIdentifier(identifier);
-      if (!existing && identifier.toLowerCase() !== "admin") {
-        return NextResponse.json(
-          {
-            error: `Akun "${identifier}" belum terdaftar. Silakan klik tab "Daftar Baru" untuk membuat akun toko Anda.`,
-            notRegistered: true,
-          },
-          { status: 404 }
-        );
-      }
-
-      tenant = await authenticateTenant(identifier, pin);
-      if (!tenant) {
-        return NextResponse.json(
-          { error: "PIN yang Anda masukkan salah. Silakan periksa 6 digit PIN akun Anda." },
-          { status: 401 }
-        );
-      }
-    } else {
-      // If no identifier is specified, check against default tenant (admin / CV. TRADING MINYAK)
-      tenant = await authenticateTenant("admin", pin);
-      if (!tenant) {
-        // Check if there is only 1 tenant in the DB
-        const count = await prisma.tenant.count();
-        if (count === 1) {
-          const onlyTenant = await prisma.tenant.findFirst();
-          if (onlyTenant) {
-            tenant = await authenticateTenant(onlyTenant.identifier, pin);
+    if (!existing) {
+      // If user typed admin or default, check fallback
+      if (targetId.toLowerCase() === "admin") {
+        const defaultTenant = await prisma.tenant.findUnique({ where: { id: DEFAULT_TENANT_ID } });
+        if (defaultTenant) {
+          const inputHash = await hashPIN(pin);
+          if (defaultTenant.pinHash === inputHash) {
+            tenant = defaultTenant;
           }
         }
       }
 
       if (!tenant) {
         return NextResponse.json(
-          { error: "PIN salah atau akun tidak ditemukan. Silakan masukkan Username / No. HP Anda." },
+          {
+            error: `Akun "${targetId}" belum terdaftar. Silakan klik tab "Daftar Baru" untuk membuat akun toko Anda.`,
+            notRegistered: true,
+          },
+          { status: 404 }
+        );
+      }
+    } else {
+      const inputHash = await hashPIN(pin);
+      if (existing.pinHash === inputHash) {
+        tenant = existing;
+      } else {
+        return NextResponse.json(
+          { error: "PIN yang Anda masukkan salah. Silakan periksa 6 digit PIN akun Anda." },
           { status: 401 }
         );
       }
