@@ -159,6 +159,8 @@ export function DashboardClient({ initialData, initialMetrics, tenant }: Dashboa
       const fd = new FormData();
       fd.append("date", formData.date);
       fd.append("supplierName", formData.supplierName);
+      if (formData.subject) fd.append("subject", formData.subject);
+      if (formData.deliveryTarget) fd.append("deliveryTarget", formData.deliveryTarget);
       fd.append("items", JSON.stringify(formData.items));
       fd.append("expectedRevenue", String(formData.expectedRevenue || 0));
       fd.append("notes", formData.notes || "");
