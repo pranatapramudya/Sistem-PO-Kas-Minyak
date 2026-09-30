@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
 
     const res = NextResponse.json({
       success: true,
-      message: "Pendaftaran usaha berhasil! Selamat datang di Sistem PO & Kas Minyak.",
+      message: "Pendaftaran usaha berhasil! Selamat datang di Sistem PO & Sembako.",
       tenant: {
         id: tenant.id,
         companyName: tenant.companyName,

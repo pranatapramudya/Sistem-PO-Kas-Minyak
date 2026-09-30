@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { 
   ArrowLeft, 
   BookOpen, 
@@ -21,6 +22,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function PanduanPage() {
+  const router = useRouter();
+
+  const handleBack = () => {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push("/");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 p-4 sm:p-6 lg:p-8 font-sans">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -35,15 +46,18 @@ export default function PanduanPage() {
                 Buku Panduan Cara Pakai
               </h1>
               <p className="text-xs sm:text-sm text-slate-500 font-medium">
-                Petunjuk Lengkap &amp; Praktis Sistem Pembukuan PO &amp; Kas Minyak
+                Petunjuk Lengkap &amp; Praktis Sistem Pembukuan PO &amp; Sembako
               </p>
             </div>
           </div>
-          <a href="/">
-            <Button variant="outline" size="sm" className="h-9 font-bold border-slate-200 bg-white shadow-2xs text-slate-700">
-              <ArrowLeft className="h-4 w-4 mr-1.5" /> Kembali ke Dashboard
-            </Button>
-          </a>
+          <Button
+            onClick={handleBack}
+            variant="outline"
+            size="sm"
+            className="h-9 font-bold border-slate-200 bg-white shadow-2xs text-slate-700"
+          >
+            <ArrowLeft className="h-4 w-4 mr-1.5" /> Kembali ke Dashboard
+          </Button>
         </div>
 
         {/* Ringkasan Cepat Alur Usaha */}
@@ -309,11 +323,13 @@ export default function PanduanPage() {
 
         {/* Bottom Back Button */}
         <div className="pt-2 pb-6 text-center">
-          <a href="/">
-            <Button size="lg" className="h-11 px-6 font-bold bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-xs">
-              <ArrowLeft className="h-4 w-4 mr-2" /> Kembali ke Halaman Utama
-            </Button>
-          </a>
+          <Button
+            onClick={handleBack}
+            size="lg"
+            className="h-11 px-6 font-bold bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-xs"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" /> Kembali ke Halaman Utama
+          </Button>
         </div>
       </div>
     </div>

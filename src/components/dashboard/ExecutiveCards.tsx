@@ -57,10 +57,10 @@ export function ExecutiveCard({
 
   return (
     <Card className={cn(
-      "border border-slate-200/90 shadow-xs hover:shadow-sm bg-white rounded-xl transition-all overflow-hidden flex flex-col justify-between border-t-2",
+      "border border-slate-200/90 shadow-xs hover:shadow-sm bg-white rounded-xl transition-all overflow-hidden flex flex-col justify-between border-t-[3px]",
       style.topLine
     )}>
-      <CardContent className="p-3 sm:p-4 flex flex-col justify-between h-full space-y-2">
+      <CardContent className="pt-4 sm:pt-4.5 pb-3.5 sm:pb-4 px-3.5 sm:px-4 flex flex-col justify-between h-full space-y-2.5">
         {/* Top Row: Title + Icon */}
         <div className="flex items-start justify-between gap-1.5 min-h-[2.25rem]">
           <p className="text-[11px] sm:text-xs md:text-sm font-bold text-slate-700 leading-snug break-words">

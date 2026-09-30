@@ -95,7 +95,7 @@ export function POFormDialog({ open, onOpenChange, onSubmit, editData, loading }
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl w-full max-h-[92vh] overflow-y-auto p-4 sm:p-6 bg-white text-slate-900 border border-slate-200">
-        <DialogHeader className="border-b border-slate-100 pb-3">
+        <DialogHeader className="border-b border-slate-100 pb-3 pr-8 sm:pr-10">
           <DialogTitle className="text-lg sm:text-xl font-bold flex items-center gap-2 text-slate-900">
             {editData ? (
               <>

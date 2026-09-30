@@ -3,7 +3,23 @@ import { z } from "zod";
 /**
  * Unit options for order items
  */
-export const UNIT_OPTIONS = ["Jerigen", "Drum", "Liter", "Pcs", "Kg", "Box"] as const;
+export const UNIT_OPTIONS = [
+  "Dus",
+  "Karton",
+  "Karung",
+  "Sak",
+  "Bal",
+  "Pack",
+  "Kg",
+  "Liter",
+  "Pcs",
+  "Jerigen",
+  "Drum",
+  "Krat",
+  "Kaleng",
+  "Renceng",
+  "Box",
+] as const;
 export type Unit = (typeof UNIT_OPTIONS)[number];
 
 /**

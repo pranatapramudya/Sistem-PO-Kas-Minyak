@@ -201,6 +201,7 @@ export async function POST(
           paymentMethod: paymentMethod as "TRANSFER_BANK" | "TUNAI",
           proofFileUrl,
           notes,
+          tenantId: po.tenantId,
         },
       }),
       prisma.purchaseOrder.update({

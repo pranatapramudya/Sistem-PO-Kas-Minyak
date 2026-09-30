@@ -1,6 +1,6 @@
-# 🛢️ Sistem PO & Kas Minyak (Multi-Tenant SaaS)
+# 🌾 Sistem PO & Sembako (Multi-Tenant SaaS)
 
-Aplikasi manajemen **Purchase Order (PO)**, pembukuan **Kas Masuk**, monitoring **Piutang Berjalan**, dan perhitungan **Laba Bersih** berbasis web modern dan Progressive Web App (PWA) dengan arsitektur **Multi-Tenant (Multi-Usaha)** untuk bisnis distribusi & trading minyak.
+Aplikasi manajemen **Purchase Order (PO)**, pembukuan **Kas Masuk**, monitoring **Piutang Berjalan**, dan perhitungan **Laba Bersih** berbasis web modern dan Progressive Web App (PWA) dengan arsitektur **Multi-Tenant (Multi-Usaha)** untuk perdagangan & distribusi sembako serta bahan pangan.
 
 ---
 

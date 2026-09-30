@@ -258,10 +258,10 @@ export default function LoginPage() {
 
         <div className="space-y-0.5">
           <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900">
-            Sistem PO &amp; Kas Minyak
+            Sistem PO &amp; Sembako
           </h1>
           <p className="text-xs text-slate-500 font-medium">
-            Platform Manajemen Pembukuan PO &amp; Kas Minyak
+            Platform Manajemen Pembukuan PO &amp; Sembako
           </p>
         </div>
 
@@ -326,7 +326,7 @@ export default function LoginPage() {
               <span>Pendaftaran Toko Baru:</span>
             </div>
             <p className="text-[11px] text-emerald-800 leading-relaxed">
-              Belum punya akun? Isi data toko di bawah ini untuk memulai pembukuan PO &amp; kas minyak Anda. Data Anda 100% terisolasi khusus untuk usaha Anda.
+              Belum punya akun? Isi data toko di bawah ini untuk memulai pembukuan PO &amp; sembako Anda. Data Anda 100% terisolasi khusus untuk usaha Anda.
             </p>
           </div>
 
@@ -343,7 +343,7 @@ export default function LoginPage() {
             <div className="space-y-1">
               <label className="text-xs font-bold text-slate-700">Nama Usaha / Toko *</label>
               <Input
-                placeholder="Contoh: Toko Minyak Barokah / CV. Sawit"
+                placeholder="Contoh: Toko Sembako Barokah / CV. Berkah"
                 value={regCompanyName}
                 onChange={(e) => setRegCompanyName(e.target.value)}
                 className="h-10 text-xs sm:text-sm font-medium"

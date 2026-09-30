@@ -160,7 +160,7 @@ export function POMobileCard({ po, onView, onEdit, onPrint, onDelete, onRecordCa
 
   return (
     <Card className="border border-slate-200/90 shadow-xs bg-white rounded-xl overflow-hidden hover:shadow-sm transition-all">
-      <CardContent className="p-3.5 space-y-3">
+      <CardContent className="pt-4 pb-3.5 px-3.5 sm:px-4 space-y-3">
         {/* Top Header */}
         <div className="flex items-center justify-between border-b border-slate-100 pb-2">
           <div>
@@ -310,10 +310,10 @@ export function PODashboardTable({
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
-  // Reset to page 1 whenever data length changes (e.g. search or filter changed)
+  // Reset to page 1 whenever data changes (e.g. search or filter changed)
   useEffect(() => {
     setCurrentPage(1);
-  }, [data.length]);
+  }, [data]);
 
   const totalPages = Math.max(1, Math.ceil(data.length / pageSize));
   const validPage = Math.min(Math.max(1, currentPage), totalPages);

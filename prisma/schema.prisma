@@ -28,7 +28,7 @@ model Tenant {
 
 model PurchaseOrder {
   id              String       @id @default(cuid())
-  poNumber        String       @unique
+  poNumber        String
   date            DateTime
   supplierName    String
   status          String       @default("OUTSTANDING") // OUTSTANDING, PARTIAL, CLOSED
@@ -45,6 +45,7 @@ model PurchaseOrder {
   items      OrderItem[]
   cashInflow CashInflow[]
 
+  @@unique([tenantId, poNumber])
   @@index([tenantId])
   @@index([date])
   @@index([status])

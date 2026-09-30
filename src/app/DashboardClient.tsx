@@ -8,6 +8,7 @@ import { PODashboardTable, type POTableData } from "@/components/dashboard/PODas
 import { POFormDialog } from "@/components/dashboard/POFormDialog";
 import { CashInflowDialog } from "@/components/dashboard/CashInflowDialog";
 import { PODetailDialog } from "@/components/dashboard/PODetailDialog";
+import { PanduanDialog } from "@/components/dashboard/PanduanDialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/components/ui/modern-toast";
 import { formatRupiah } from "@/lib/utils";
@@ -56,6 +57,7 @@ export function DashboardClient({ initialData, initialMetrics, tenant }: Dashboa
   const [poFormOpen, setPoFormOpen] = useState(false);
   const [cashInflowOpen, setCashInflowOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [panduanOpen, setPanduanOpen] = useState(false);
 
   const [selectedPO, setSelectedPO] = useState<POTableData | null>(null);
   const [detailPoId, setDetailPoId] = useState<string | null>(null);
@@ -323,32 +325,22 @@ export function DashboardClient({ initialData, initialMetrics, tenant }: Dashboa
       {/* Top Header */}
       <div className="flex items-center justify-between gap-2 border-b border-slate-200/80 pb-3 sm:pb-4">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-lg sm:text-2xl font-black tracking-tight text-slate-900 leading-tight">
-              {tenant?.companyName || "Sistem PO & Kas Minyak"}
-            </h1>
-            <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 font-bold border border-emerald-200 shrink-0">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Cloud Sync
-            </span>
-          </div>
-          <p className="text-xs sm:text-sm text-slate-600 font-medium mt-0.5 truncate">
-            {tenant ? `${tenant.companyName} • Akun: ${tenant.identifier}` : "CV. TRADING MINYAK • Pembukuan PO & Kas"}
-          </p>
+          <h1 className="text-lg sm:text-2xl font-black tracking-tight text-slate-900 leading-tight">
+            {tenant?.companyName || "Sistem PO & Sembako"}
+          </h1>
         </div>
 
         {/* Mobile Quick Actions (Top-Right) */}
         <div className="flex md:hidden items-center gap-1.5 shrink-0">
-          <Link href="/panduan">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 px-2 text-xs font-bold text-blue-700 bg-blue-50/80 hover:bg-blue-100 border-blue-200 rounded-lg shadow-2xs"
-              title="Buku Panduan Cara Pakai"
-            >
-              <BookOpen className="h-3.5 w-3.5 mr-1 text-blue-600" /> Panduan
-            </Button>
-          </Link>
+          <Button
+            onClick={() => setPanduanOpen(true)}
+            variant="outline"
+            size="sm"
+            className="h-8 px-2 text-xs font-bold text-blue-700 bg-blue-50/80 hover:bg-blue-100 border-blue-200 rounded-lg shadow-2xs"
+            title="Buku Panduan Cara Pakai"
+          >
+            <BookOpen className="h-3.5 w-3.5 mr-1 text-blue-600" /> Panduan
+          </Button>
           <Button
             onClick={handleLogout}
             variant="outline"
@@ -362,13 +354,17 @@ export function DashboardClient({ initialData, initialMetrics, tenant }: Dashboa
 
         {/* Desktop Action Buttons: Hidden on Mobile, Visible on md+ */}
         <div className="hidden md:flex items-center gap-2">
-          <Link href="/panduan">
-            <Button variant="outline" size="sm" className="h-9 text-xs sm:text-sm border-blue-200 text-blue-700 bg-blue-50/60 hover:bg-blue-100 font-semibold" title="Buku Panduan Cara Pakai">
-              <BookOpen className="h-3.5 w-3.5 mr-1 text-blue-600" /> Panduan
-            </Button>
-          </Link>
+          <Button
+            onClick={() => setPanduanOpen(true)}
+            variant="outline"
+            size="sm"
+            className="h-9 text-xs sm:text-sm border-blue-200 text-blue-700 bg-blue-50/60 hover:bg-blue-100 font-semibold"
+            title="Buku Panduan Cara Pakai"
+          >
+            <BookOpen className="h-3.5 w-3.5 mr-1 text-blue-600" /> Panduan
+          </Button>
 
-          <Link href="/settings">
+          <Link href="/settings" prefetch={true}>
             <Button variant="outline" size="sm" className="h-9 text-xs sm:text-sm border-slate-200" title="Pengaturan Kop Surat">
               <Settings className="h-3.5 w-3.5 mr-1" /> Pengaturan
             </Button>
@@ -482,7 +478,7 @@ export function DashboardClient({ initialData, initialMetrics, tenant }: Dashboa
 
       {/* Filter Status Chips Card (Terpisah) */}
       <Card className="border border-slate-200/90 shadow-xs bg-white rounded-xl">
-        <CardContent className="p-3 sm:p-4 space-y-2.5">
+        <CardContent className="pt-4 pb-3.5 px-3 sm:px-4 space-y-2.5">
           {/* Quick Filter: 4-Column Grid on Mobile, Flex on Desktop */}
           <div className="grid grid-cols-4 gap-1.5 sm:flex sm:items-center sm:gap-2">
             <button
@@ -620,6 +616,11 @@ export function DashboardClient({ initialData, initialMetrics, tenant }: Dashboa
         onRefresh={refreshData}
       />
 
+      <PanduanDialog
+        open={panduanOpen}
+        onOpenChange={setPanduanOpen}
+      />
+
       {/* Modern Confirm Delete Dialog for PO */}
       <ConfirmDialog
         open={!!poToDelete}
@@ -687,6 +688,7 @@ export function DashboardClient({ initialData, initialMetrics, tenant }: Dashboa
           {/* 5. Pengaturan */}
           <Link
             href="/settings"
+            prefetch={true}
             className="flex flex-col items-center justify-center flex-1 py-1 text-slate-700 active:text-slate-900 transition-colors"
           >
             <Settings className="h-5 w-5 mb-0.5 stroke-[2.2]" />

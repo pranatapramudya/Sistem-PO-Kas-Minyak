@@ -27,10 +27,11 @@ Aplikasi ini menerapkan **Multi-Tenant dengan Shared Database & Tenant Isolation
 1. **Model `Tenant` (Prisma):**
    * Menyimpan entitas bisnis/toko (`id`, `companyName`, `ownerName`, `identifier`, `address`, `phone`, `npwp`, `pinHash`, `recoveryKey`).
    * `identifier`: Unik (No. HP / Username / Email).
-2. **Relasi Transaksi:**
+2. **Relasi Transaksi & Penomoran PO:**
    * Setiap data `PurchaseOrder` dan `CashInflow` terhubung ke `tenantId`.
    * **Aturan Kritis:** Setiap API Route dan Server Component **WAJIB** memfilter data dengan `where: { tenantId }`.
-   * Tenant B tidak boleh memiliki akses untuk melihat, mengedit, atau menghapus transaksi milik Tenant A.
+   * **Nomor PO Scoped per Tenant:** `PurchaseOrder` menggunakan constraint `@@unique([tenantId, poNumber])`. Setiap tenant memiliki penomoran PO independen mulai dari `PO-YYYYMM-0001`. Generator nomor PO mencari urutan tertinggi pada bulan berjalan (`PO-YYYYMM-XXXX`) milik tenant aktif untuk mencegah tabrakan saat ada PO yang dihapus.
+   * **Satuan Barang (Sembako):** Mendukung satuan luas untuk kebutuhan grosir dan eceran sembako: `Dus`, `Karton`, `Karung`, `Sak`, `Bal`, `Pack`, `Kg`, `Liter`, `Pcs`, `Jerigen`, `Drum`, `Krat`, `Kaleng`, `Renceng`, `Box`.
 3. **Session Token Multi-Tenant:**
    * Format payload token: `auth:${tenantId}:${expiry}`.
    * Ditandatangani menggunakan HMAC SHA-256 dengan secret key `AUTH_SECRET`.

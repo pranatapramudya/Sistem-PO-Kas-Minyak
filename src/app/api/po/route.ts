@@ -84,9 +84,44 @@ export async function POST(request: NextRequest) {
       proofFileUrl = await saveUploadFile(proofFile);
     }
 
-    // Generate PO Number scoped by tenant count
-    const count = await prisma.purchaseOrder.count({ where: { tenantId } });
-    const poNumber = generatePONumber(count);
+    // Generate PO Number scoped by tenant for current month
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const prefix = `PO-${year}${month}-`;
+
+    const latestPO = await prisma.purchaseOrder.findFirst({
+      where: {
+        tenantId,
+        poNumber: { startsWith: prefix },
+      },
+      orderBy: { poNumber: "desc" },
+      select: { poNumber: true },
+    });
+
+    let nextSequence = 1;
+    if (latestPO) {
+      const parts = latestPO.poNumber.split("-");
+      const lastSeq = parseInt(parts[parts.length - 1], 10);
+      if (!isNaN(lastSeq)) {
+        nextSequence = lastSeq + 1;
+      }
+    }
+
+    // Safety fallback: ensure generated number does not collide within this tenant
+    let poNumber = `${prefix}${String(nextSequence).padStart(4, "0")}`;
+    while (
+      await prisma.purchaseOrder.findFirst({
+        where: {
+          tenantId,
+          poNumber,
+        },
+        select: { id: true },
+      })
+    ) {
+      nextSequence++;
+      poNumber = `${prefix}${String(nextSequence).padStart(4, "0")}`;
+    }
 
     // Calculate total cost
     const items = parsed.data.items;

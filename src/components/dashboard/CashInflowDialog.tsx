@@ -113,10 +113,10 @@ export function CashInflowDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md w-full max-h-[92vh] overflow-y-auto p-4 sm:p-6 bg-white text-slate-900 border border-slate-200">
-        <DialogHeader className="border-b border-slate-100 pb-3">
+        <DialogHeader className="border-b border-slate-100 pb-3 pr-8 sm:pr-10">
           <DialogTitle className="text-base sm:text-lg font-bold flex items-center gap-2 text-slate-900">
-            <DollarSign className="h-5 w-5 text-emerald-600" />
-            Catat Kas Masuk (Pelunasan Pembeli)
+            <DollarSign className="h-5 w-5 text-emerald-600 shrink-0" />
+            <span>Catat Kas Masuk</span>
           </DialogTitle>
           <DialogDescription className="text-xs sm:text-sm text-slate-500">
             {currentPO
@@ -133,15 +133,25 @@ export function CashInflowDialog({
                 Pilih Purchase Order *
               </Label>
               <Select value={currentPO?.id || ""} onValueChange={handlePOChange}>
-                <SelectTrigger id="poSelect" className="text-xs sm:text-sm h-9 sm:h-10 bg-white border-slate-200">
+                <SelectTrigger id="poSelect" className="text-xs sm:text-sm h-10 bg-white border-slate-200 w-full">
                   <SelectValue placeholder="-- Pilih PO yang akan dilunasi --" />
                 </SelectTrigger>
-                <SelectContent>
-                  {availablePOs.map((p) => (
-                    <SelectItem key={p.id} value={p.id} className="text-xs">
-                      {p.poNumber} — {p.supplierName} ({formatRupiah(p.totalCost)})
-                    </SelectItem>
-                  ))}
+                <SelectContent className="w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-2.5rem)]">
+                  {availablePOs.map((p) => {
+                    const remainingCost = Math.max(0, p.totalCost - p.totalCashInflow);
+                    return (
+                      <SelectItem key={p.id} value={p.id} className="text-xs py-2 cursor-pointer">
+                        <div className="flex flex-col min-w-0 pr-1 text-left">
+                          <span className="font-semibold text-slate-800 truncate">
+                            {p.poNumber} &bull; {p.supplierName}
+                          </span>
+                          <span className="text-[11px] text-slate-500 font-mono mt-0.5">
+                            Tagihan: {formatRupiah(remainingCost > 0 ? remainingCost : p.totalCost)} {remainingCost > 0 && remainingCost < p.totalCost ? "(Sisa)" : ""}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, AlertCircle, ArrowLeft, Building2, Lock, KeyRound, User } from "lucide-react";
 
 export default function SettingsPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [saved, setSaved] = useState(false);
@@ -21,6 +23,18 @@ export default function SettingsPage() {
   const [appPhone, setAppPhone] = useState("");
   const [npwp, setNpwp] = useState("");
   const [newPin, setNewPin] = useState("");
+
+  useEffect(() => {
+    router.prefetch("/");
+  }, [router]);
+
+  const handleBack = () => {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push("/");
+    }
+  };
 
   useEffect(() => {
     async function loadTenant() {
@@ -94,20 +108,39 @@ export default function SettingsPage() {
 
   return (
     <div className="p-4 md:p-6 max-w-2xl mx-auto space-y-6 pb-20 font-sans">
-      <div className="flex items-center justify-between border-b pb-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-black text-slate-900 flex items-center gap-2">
-            <Building2 className="h-6 w-6 text-slate-900" /> Pengaturan Profil Usaha
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Data ini digunakan untuk identitas pembukuan dan kop surat resmi (Kertas A4).
-          </p>
-        </div>
-        <Link href="/">
-          <Button variant="outline" size="sm" className="h-9 font-semibold text-slate-700">
-            <ArrowLeft className="h-4 w-4 mr-1.5" /> Dashboard
+      {/* Header with instant back action & clear visual hierarchy */}
+      <div className="border-b border-slate-200/90 pb-4 space-y-3">
+        {/* Navigation Action Top Bar */}
+        <div className="flex items-center justify-between">
+          <Button
+            type="button"
+            onClick={handleBack}
+            variant="outline"
+            size="sm"
+            className="h-8 px-2.5 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border-slate-200 rounded-lg shadow-2xs transition-all active:scale-95 cursor-pointer"
+          >
+            <ArrowLeft className="h-3.5 w-3.5 mr-1 text-slate-600" /> Dashboard
           </Button>
-        </Link>
+
+          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+            Pengaturan Akun
+          </span>
+        </div>
+
+        {/* Title & Description with Dedicated Icon Badge */}
+        <div className="flex items-start gap-3 pt-0.5">
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-800 shrink-0 shadow-2xs mt-0.5">
+            <Building2 className="w-5 h-5 sm:w-6 sm:h-6" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-tight">
+              Pengaturan Profil Usaha
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1 leading-relaxed">
+              Data ini digunakan untuk identitas pembukuan dan kop surat resmi (Kertas A4).
+            </p>
+          </div>
+        </div>
       </div>
 
       <Card className="border border-slate-200/90 shadow-xs bg-white rounded-xl">
@@ -223,6 +256,16 @@ export default function SettingsPage() {
             <Button type="submit" disabled={loading} className="w-full h-10 font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-xs">
               {loading ? "Menyimpan Perubahan..." : "Simpan Profil Usaha"}
             </Button>
+
+            <div className="pt-2 text-center">
+              <button
+                type="button"
+                onClick={handleBack}
+                className="text-xs text-slate-500 hover:text-slate-800 font-semibold transition-colors cursor-pointer inline-flex items-center gap-1.5 py-1"
+              >
+                <ArrowLeft className="h-3.5 w-3.5 text-slate-400" /> Kembali ke Dashboard
+              </button>
+            </div>
           </form>
         </CardContent>
       </Card>
