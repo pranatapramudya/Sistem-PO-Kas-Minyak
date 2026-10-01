@@ -66,9 +66,12 @@ const tens = [
 
 function convertHundreds(num: number): string {
   if (num === 0) return "";
+  if (num === 10) return "Sepuluh";
+  if (num === 11) return "Sebelas";
   if (num < 12) return units[num];
   if (num < 20) return units[num - 10] + " Belas";
-  if (num < 100) return tens[Math.floor(num / 10)] + (num % 10 ? " " + units[num % 10] : "");
+  if (num < 100) return (num === 10 ? "Sepuluh" : tens[Math.floor(num / 10)]) + (num % 10 ? " " + units[num % 10] : "");
+  if (num < 200) return "Seratus" + (num % 100 ? " " + convertHundreds(num % 100) : "");
   return units[Math.floor(num / 100)] + " Ratus" + (num % 100 ? " " + convertHundreds(num % 100) : "");
 }
 
@@ -85,8 +88,15 @@ export function terbilang(num: number): string {
   if (billions > 0) result += convertHundreds(billions) + " Miliar ";
   if (millions > 0) result += convertHundreds(millions) + " Juta ";
   if (thousands > 0) {
-    if (thousands === 1) result += "Seribu ";
-    else result += convertHundreds(thousands) + " Ribu ";
+    if (thousands === 1 && billions === 0 && millions === 0) {
+      result += "Seribu ";
+    } else if (thousands < 2 && billions === 0 && millions === 0) {
+      // Catch edge case for exactly 1000
+    } else if (thousands < 2) {
+      result += "Satu Ribu "; // Example: 1,001,000 -> Satu Juta Satu Ribu
+    } else {
+      result += convertHundreds(thousands) + " Ribu ";
+    }
   }
   if (hundreds > 0) result += convertHundreds(hundreds) + " ";
 
