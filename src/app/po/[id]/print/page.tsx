@@ -46,7 +46,7 @@ export default async function POPrintPage({ params }: POPrintPageProps) {
         : "bg-amber-50 text-amber-800 border-amber-300";
 
   return (
-    <div className="bg-slate-100 min-h-screen pb-12 print:bg-white print:p-0 print:m-0">
+    <div className="bg-slate-100 min-h-screen pb-12 print:bg-white print:p-0 print:m-0 overflow-x-hidden">
       <PrintActionBar poNumber={po.poNumber} />
 
       {/* Mobile helper notice banner: hidden in print */}
@@ -55,14 +55,15 @@ export default async function POPrintPage({ params }: POPrintPageProps) {
           <span className="flex items-center gap-1.5 font-bold">
             <span>📄</span> Pratinjau Kertas A4 Resmi
           </span>
-          <span className="text-[11px] text-blue-700">Geser untuk melihat ⇄</span>
         </div>
       </div>
 
       {/* Horizontal scroll wrapper for mobile preview */}
-      <div className="print-scroll-wrapper w-full overflow-x-auto px-2 sm:px-6 pb-6 print:p-0 print:overflow-visible print:w-full">
-        {/* A4 Paper Container with fixed standard proportions */}
-        <div className="print-sheet w-[794px] max-w-[210mm] min-w-[760px] mx-auto bg-white border border-slate-300 shadow-md rounded-xs p-8 sm:p-10 text-slate-900 text-xs font-sans leading-relaxed print:w-full print:min-w-0 print:max-w-none print:shadow-none print:border-none print:p-0">
+      <div className="print-scroll-wrapper w-full px-1 sm:px-6 pb-6 print:p-0 print:overflow-visible print:w-full flex justify-center">
+        {/* A4 Paper Container - Responsive fit */}
+        <div 
+          className="print-sheet bg-white border border-slate-300 shadow-md rounded-xs p-3 sm:p-8 text-slate-900 text-[9px] sm:text-xs font-sans leading-relaxed print:shadow-none print:border-none print:p-0 w-full max-w-[210mm] mx-auto"
+        >
 
           {/* Kop Surat Resmi: Selalu Berdampingan Kiri-Kanan */}
           <div className="flex items-start justify-between gap-4 pb-3">
@@ -136,37 +137,37 @@ export default async function POPrintPage({ params }: POPrintPageProps) {
           </div>
 
           {/* Tabel Rincian Barang (Presisi Grid Table) */}
-          <div className="mb-4">
-            <table className="w-full border-collapse border border-slate-400 text-xs">
+          <div className="mb-4 w-full overflow-x-auto">
+            <table className="w-full border-collapse border border-slate-400 text-[10px] sm:text-xs">
               <thead>
                 <tr className="bg-slate-100 text-slate-900 font-bold uppercase tracking-wider border-b-2 border-slate-400">
-                  <th className="border border-slate-300 py-2 px-2 text-center w-10">No</th>
-                  <th className="border border-slate-300 py-2 px-3 text-left">Nama Barang / Deskripsi</th>
-                  <th className="border border-slate-300 py-2 px-2 text-center w-16">Qty</th>
-                  <th className="border border-slate-300 py-2 px-2 text-center w-20">Satuan</th>
-                  <th className="border border-slate-300 py-2 px-3 text-right w-32">Harga Satuan</th>
-                  <th className="border border-slate-300 py-2 px-3 text-right w-36">Subtotal</th>
+                  <th className="border border-slate-300 py-1.5 sm:py-2 px-1 sm:px-2 text-center w-8">No</th>
+                  <th className="border border-slate-300 py-1.5 sm:py-2 px-1.5 sm:px-3 text-left">Nama Barang / Deskripsi</th>
+                  <th className="border border-slate-300 py-1.5 sm:py-2 px-1 sm:px-2 text-center w-8 sm:w-16">Qty</th>
+                  <th className="border border-slate-300 py-1.5 sm:py-2 px-1 sm:px-2 text-center w-12 sm:w-20">Satuan</th>
+                  <th className="border border-slate-300 py-1.5 sm:py-2 px-1.5 sm:px-3 text-right w-20 sm:w-32">Harga Satuan</th>
+                  <th className="border border-slate-300 py-1.5 sm:py-2 px-1.5 sm:px-3 text-right w-24 sm:w-36">Subtotal</th>
                 </tr>
               </thead>
               <tbody>
                 {po.items.map((item, idx) => (
                   <tr key={item.id} className="border-b border-slate-300">
-                    <td className="border border-slate-300 py-2 px-2 text-center font-medium text-slate-700">
+                    <td className="border border-slate-300 py-1.5 sm:py-2 px-1 sm:px-2 text-center font-medium text-slate-700">
                       {idx + 1}
                     </td>
-                    <td className="border border-slate-300 py-2 px-3 font-semibold text-slate-900">
+                    <td className="border border-slate-300 py-1.5 sm:py-2 px-1.5 sm:px-3 font-semibold text-slate-900 break-words whitespace-normal min-w-[100px]">
                       {item.itemName}
                     </td>
-                    <td className="border border-slate-300 py-2 px-2 text-center font-mono font-bold text-slate-900">
+                    <td className="border border-slate-300 py-1.5 sm:py-2 px-1 sm:px-2 text-center font-mono font-bold text-slate-900">
                       {item.qty}
                     </td>
-                    <td className="border border-slate-300 py-2 px-2 text-center text-slate-700">
+                    <td className="border border-slate-300 py-1.5 sm:py-2 px-1 sm:px-2 text-center text-slate-700">
                       {item.unit}
                     </td>
-                    <td className="border border-slate-300 py-2 px-3 text-right font-mono tabular-nums text-slate-800">
+                    <td className="border border-slate-300 py-1.5 sm:py-2 px-1.5 sm:px-3 text-right font-mono tabular-nums text-slate-800 whitespace-nowrap">
                       {formatRupiah(item.unitPrice)}
                     </td>
-                    <td className="border border-slate-300 py-2 px-3 text-right font-mono font-bold tabular-nums text-slate-950">
+                    <td className="border border-slate-300 py-1.5 sm:py-2 px-1.5 sm:px-3 text-right font-mono font-bold tabular-nums text-slate-950 whitespace-nowrap">
                       {formatRupiah(item.subtotal)}
                     </td>
                   </tr>
@@ -174,10 +175,10 @@ export default async function POPrintPage({ params }: POPrintPageProps) {
               </tbody>
               <tfoot>
                 <tr className="bg-slate-100/90 font-bold border-t-2 border-slate-700 text-slate-900">
-                  <td colSpan={5} className="border border-slate-300 py-2.5 px-3 text-right uppercase tracking-wider text-xs">
+                  <td colSpan={5} className="border border-slate-300 py-2 sm:py-2.5 px-1.5 sm:px-3 text-right uppercase tracking-wider text-[10px] sm:text-xs">
                     TOTAL MODAL PO :
                   </td>
-                  <td className="border border-slate-300 py-2.5 px-3 text-right font-mono text-sm font-black text-slate-950 tabular-nums">
+                  <td className="border border-slate-300 py-2 sm:py-2.5 px-1.5 sm:px-3 text-right font-mono font-black tabular-nums text-slate-950 text-[11px] sm:text-sm">
                     {formatRupiah(po.totalCost)}
                   </td>
                 </tr>
