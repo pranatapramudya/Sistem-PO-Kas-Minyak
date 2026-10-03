@@ -2,7 +2,18 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, Delete, AlertCircle, KeyRound, ArrowLeft, CheckCircle2, Building, UserPlus, LogIn, Loader2 } from "lucide-react";
+import {
+  Lock,
+  Delete,
+  AlertCircle,
+  KeyRound,
+  ArrowLeft,
+  CheckCircle2,
+  Building,
+  UserPlus,
+  LogIn,
+  Loader2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -100,6 +111,9 @@ export default function LoginPage() {
     setLoadingStep("Memeriksa kredensial...");
     setError(null);
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout guard
+
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
@@ -109,8 +123,10 @@ export default function LoginPage() {
           pin: pinToSubmit,
           remember,
         }),
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         throw new Error(data.error || "Username atau PIN salah.");
@@ -122,9 +138,17 @@ export default function LoginPage() {
       } catch {}
 
       setLoadingStep("Membuka dashboard toko...");
-      window.location.href = "/";
+      router.push("/");
+      router.refresh();
     } catch (err: any) {
-      triggerShake(err.message || "Login gagal. Periksa username dan PIN Anda.");
+      clearTimeout(timeoutId);
+      if (err.name === "AbortError") {
+        triggerShake("Koneksi internet lambat / tidak stabil. Coba lagi.");
+      } else {
+        triggerShake(
+          err.message || "Login gagal. Periksa username dan PIN Anda.",
+        );
+      }
       setLoading(false);
     }
   };
@@ -153,6 +177,9 @@ export default function LoginPage() {
     setLoadingStep("Mendaftarkan toko baru...");
     setError(null);
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
     try {
       const res = await fetch("/api/auth/register", {
         method: "POST",
@@ -163,8 +190,10 @@ export default function LoginPage() {
           ownerName: regOwnerName.trim() || undefined,
           pin: regPin,
         }),
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         throw new Error(data.error || "Gagal mendaftarkan usaha baru.");
@@ -176,9 +205,17 @@ export default function LoginPage() {
 
       setLoadingStep("Membuka dashboard toko...");
       setSuccessMsg("Pendaftaran berhasil! Mengalihkan ke dashboard...");
-      window.location.href = "/";
+      router.push("/");
+      router.refresh();
     } catch (err: any) {
-      setError(err.message || "Gagal mendaftar.");
+      clearTimeout(timeoutId);
+      if (err.name === "AbortError") {
+        setError(
+          "Pendaftaran timeout karena koneksi lambat. Silakan periksa jaringan.",
+        );
+      } else {
+        setError(err.message || "Gagal mendaftar.");
+      }
       setLoading(false);
     }
   };
@@ -215,7 +252,10 @@ export default function LoginPage() {
 
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error(data.error || "Gagal mengatur ulang PIN. Periksa kode pemulihan Anda.");
+        throw new Error(
+          data.error ||
+            "Gagal mengatur ulang PIN. Periksa kode pemulihan Anda.",
+        );
       }
 
       try {
@@ -272,8 +312,8 @@ export default function LoginPage() {
                 {mode === "REGISTER"
                   ? "Sedang menyiapkan database toko baru Anda..."
                   : mode === "RESET"
-                  ? "Sedang memperbarui PIN keamanan toko..."
-                  : "Sedang membuka dashboard pembukuan..."}
+                    ? "Sedang memperbarui PIN keamanan toko..."
+                    : "Sedang membuka dashboard pembukuan..."}
               </p>
             </div>
 
@@ -322,7 +362,8 @@ export default function LoginPage() {
             }}
             className="w-full py-2 px-3 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-2xs hover:bg-slate-50 cursor-pointer mt-2"
           >
-            <ArrowLeft className="w-3.5 h-3.5 text-slate-600" /> Kembali ke Pilihan Masuk / Daftar
+            <ArrowLeft className="w-3.5 h-3.5 text-slate-600" /> Kembali ke
+            Pilihan Masuk / Daftar
           </button>
         ) : (
           <div className="grid grid-cols-2 p-1 bg-slate-200/70 rounded-xl w-full text-xs font-bold gap-1 mt-2">
@@ -371,13 +412,16 @@ export default function LoginPage() {
               <span>Pendaftaran Toko Baru:</span>
             </div>
             <p className="text-[11px] text-emerald-800 leading-relaxed">
-              Belum punya akun? Isi data toko di bawah ini untuk memulai pembukuan PO &amp; sembako Anda. Data Anda 100% terisolasi khusus untuk usaha Anda.
+              Belum punya akun? Isi data toko di bawah ini untuk memulai
+              pembukuan PO &amp; sembako Anda. Data Anda 100% terisolasi khusus
+              untuk usaha Anda.
             </p>
           </div>
 
           <div className="border-b pb-2.5">
             <h2 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
-              <Building className="w-4 h-4 text-emerald-600" /> Formulir Buka Akun Toko
+              <Building className="w-4 h-4 text-emerald-600" /> Formulir Buka
+              Akun Toko
             </h2>
             <p className="text-[11px] text-slate-500 mt-0.5">
               Hanya butuh 30 detik untuk membuat akun usaha Anda.
@@ -386,7 +430,9 @@ export default function LoginPage() {
 
           <form onSubmit={handleRegisterSubmit} className="space-y-3">
             <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700">Nama Usaha / Toko *</label>
+              <label className="text-xs font-bold text-slate-700">
+                Nama Usaha / Toko *
+              </label>
               <Input
                 placeholder="Contoh: Toko Sembako Barokah / CV. Berkah"
                 value={regCompanyName}
@@ -397,18 +443,26 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700">Username / No. WhatsApp (Untuk Login) *</label>
+              <label className="text-xs font-bold text-slate-700">
+                Username / No. WhatsApp (Untuk Login) *
+              </label>
               <Input
                 placeholder="Contoh: 085812345678 atau nama_anda"
                 value={regIdentifier}
-                onChange={(e) => setRegIdentifier(e.target.value.toLowerCase().replace(/\s+/g, ""))}
+                onChange={(e) =>
+                  setRegIdentifier(
+                    e.target.value.toLowerCase().replace(/\s+/g, ""),
+                  )
+                }
                 className="h-10 text-xs sm:text-sm font-mono font-medium"
                 required
               />
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700">Nama Pemilik / Pengelola (Opsional)</label>
+              <label className="text-xs font-bold text-slate-700">
+                Nama Pemilik / Pengelola (Opsional)
+              </label>
               <Input
                 placeholder="Contoh: Budi Prasetyo"
                 value={regOwnerName}
@@ -419,7 +473,9 @@ export default function LoginPage() {
 
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Buat PIN (6 Angka) *</label>
+                <label className="text-xs font-bold text-slate-700">
+                  Buat PIN (6 Angka) *
+                </label>
                 <Input
                   type="password"
                   maxLength={6}
@@ -431,13 +487,17 @@ export default function LoginPage() {
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Ulangi PIN *</label>
+                <label className="text-xs font-bold text-slate-700">
+                  Ulangi PIN *
+                </label>
                 <Input
                   type="password"
                   maxLength={6}
                   placeholder="123456"
                   value={regPinConfirm}
-                  onChange={(e) => setRegPinConfirm(e.target.value.replace(/\D/g, ""))}
+                  onChange={(e) =>
+                    setRegPinConfirm(e.target.value.replace(/\D/g, ""))
+                  }
                   className="h-10 text-xs sm:text-sm font-mono tracking-widest text-center font-bold"
                   required
                 />
@@ -502,33 +562,47 @@ export default function LoginPage() {
               <span>Pemulihan PIN Akun Toko:</span>
             </div>
             <p className="text-[11px] text-amber-800 leading-relaxed">
-              Masukkan Username/No. HP toko Anda, kode pemulihan (default: <code className="font-bold bg-amber-100/90 px-1 py-0.5 rounded text-amber-950">sim2026</code>), dan buat 6 angka PIN baru.
+              Masukkan Username/No. HP toko Anda, kode pemulihan (default:{" "}
+              <code className="font-bold bg-amber-100/90 px-1 py-0.5 rounded text-amber-950">
+                sim2026
+              </code>
+              ), dan buat 6 angka PIN baru.
             </p>
           </div>
 
           <div className="border-b pb-2.5">
             <h2 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
-              <KeyRound className="w-4 h-4 text-amber-600" /> Atur Ulang PIN (Reset PIN)
+              <KeyRound className="w-4 h-4 text-amber-600" /> Atur Ulang PIN
+              (Reset PIN)
             </h2>
             <p className="text-[11px] text-slate-500 mt-0.5">
-              Akses akun toko Anda akan segera dipulihkan setelah PIN diperbarui.
+              Akses akun toko Anda akan segera dipulihkan setelah PIN
+              diperbarui.
             </p>
           </div>
 
           <form onSubmit={handleResetSubmit} className="space-y-3">
             <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700">Akun / Username / No. HP Toko *</label>
+              <label className="text-xs font-bold text-slate-700">
+                Akun / Username / No. HP Toko *
+              </label>
               <Input
                 placeholder="Contoh: 08123456789 atau admin"
                 value={resetIdentifier}
-                onChange={(e) => setResetIdentifier(e.target.value.toLowerCase().replace(/\s+/g, ""))}
+                onChange={(e) =>
+                  setResetIdentifier(
+                    e.target.value.toLowerCase().replace(/\s+/g, ""),
+                  )
+                }
                 className="h-10 text-xs sm:text-sm font-mono font-medium"
                 required
               />
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700">Kode Pemulihan (Master Key) *</label>
+              <label className="text-xs font-bold text-slate-700">
+                Kode Pemulihan (Master Key) *
+              </label>
               <Input
                 type="text"
                 placeholder="Default: sim2026"
@@ -537,11 +611,18 @@ export default function LoginPage() {
                 className="h-10 text-xs sm:text-sm font-mono"
                 required
               />
-              <p className="text-[10px] text-slate-400">Kode standar master bawaan: <code className="font-mono text-slate-700 font-bold bg-slate-100 px-1 rounded">sim2026</code></p>
+              <p className="text-[10px] text-slate-400">
+                Kode standar master bawaan:{" "}
+                <code className="font-mono text-slate-700 font-bold bg-slate-100 px-1 rounded">
+                  sim2026
+                </code>
+              </p>
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700">Buat PIN Baru (6 Digit Angka) *</label>
+              <label className="text-xs font-bold text-slate-700">
+                Buat PIN Baru (6 Digit Angka) *
+              </label>
               <Input
                 type="password"
                 maxLength={6}
@@ -625,7 +706,9 @@ export default function LoginPage() {
               </button>
             </div>
             <p className="text-[11px] text-blue-800 leading-snug">
-              Jika <strong>sudah punya akun</strong>, ketik Username/No. HP lalu tekan 6 angka PIN. Jika <strong>belum punya akun</strong>, silakan daftar baru terlebih dahulu.
+              Jika <strong>sudah punya akun</strong>, ketik Username/No. HP lalu
+              tekan 6 angka PIN. Jika <strong>belum punya akun</strong>, silakan
+              daftar baru terlebih dahulu.
             </p>
           </div>
 

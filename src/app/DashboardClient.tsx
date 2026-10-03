@@ -4,7 +4,10 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { ExecutiveCard } from "@/components/dashboard/ExecutiveCards";
-import { PODashboardTable, type POTableData } from "@/components/dashboard/PODashboardTable";
+import {
+  PODashboardTable,
+  type POTableData,
+} from "@/components/dashboard/PODashboardTable";
 import { POFormDialog } from "@/components/dashboard/POFormDialog";
 import { CashInflowDialog } from "@/components/dashboard/CashInflowDialog";
 import { PODetailDialog } from "@/components/dashboard/PODetailDialog";
@@ -49,7 +52,11 @@ interface DashboardClientProps {
   } | null;
 }
 
-export function DashboardClient({ initialData, initialMetrics, tenant }: DashboardClientProps) {
+export function DashboardClient({
+  initialData,
+  initialMetrics,
+  tenant,
+}: DashboardClientProps) {
   const { success: toastSuccess, error: toastError } = useToast();
   const [data, setData] = useState<POTableData[]>(initialData);
   const [metrics, setMetrics] = useState(initialMetrics);
@@ -66,7 +73,9 @@ export function DashboardClient({ initialData, initialMetrics, tenant }: Dashboa
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"ALL" | "OUTSTANDING" | "PARTIAL" | "CLOSED">("ALL");
+  const [statusFilter, setStatusFilter] = useState<
+    "ALL" | "OUTSTANDING" | "PARTIAL" | "CLOSED"
+  >("ALL");
 
   // 0-Latency Memoized search & status filter
   const filteredData = useMemo(() => {
@@ -79,35 +88,37 @@ export function DashboardClient({ initialData, initialMetrics, tenant }: Dashboa
         po.poNumber.toLowerCase().includes(q) ||
         po.supplierName.toLowerCase().includes(q) ||
         po.itemSummary.toLowerCase().includes(q);
-      const matchesStatus = statusFilter === "ALL" || po.status === statusFilter;
+      const matchesStatus =
+        statusFilter === "ALL" || po.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
   }, [data, search, statusFilter]);
 
   // Single-pass memoized tab counters & payable POs list
-  const { countAll, countOutstanding, countPartial, countClosed, payablePOs } = useMemo(() => {
-    let out = 0;
-    let part = 0;
-    let cls = 0;
-    const payables: POTableData[] = [];
+  const { countAll, countOutstanding, countPartial, countClosed, payablePOs } =
+    useMemo(() => {
+      let out = 0;
+      let part = 0;
+      let cls = 0;
+      const payables: POTableData[] = [];
 
-    for (let i = 0; i < data.length; i++) {
-      const p = data[i];
-      if (p.status === "OUTSTANDING") out++;
-      else if (p.status === "PARTIAL") part++;
-      else if (p.status === "CLOSED") cls++;
+      for (let i = 0; i < data.length; i++) {
+        const p = data[i];
+        if (p.status === "OUTSTANDING") out++;
+        else if (p.status === "PARTIAL") part++;
+        else if (p.status === "CLOSED") cls++;
 
-      if (p.status !== "CLOSED") payables.push(p);
-    }
+        if (p.status !== "CLOSED") payables.push(p);
+      }
 
-    return {
-      countAll: data.length,
-      countOutstanding: out,
-      countPartial: part,
-      countClosed: cls,
-      payablePOs: payables,
-    };
-  }, [data]);
+      return {
+        countAll: data.length,
+        countOutstanding: out,
+        countPartial: part,
+        countClosed: cls,
+        payablePOs: payables,
+      };
+    }, [data]);
 
   const refreshData = useCallback(async () => {
     setLoading(true);
@@ -160,7 +171,8 @@ export function DashboardClient({ initialData, initialMetrics, tenant }: Dashboa
       fd.append("date", formData.date);
       fd.append("supplierName", formData.supplierName);
       if (formData.subject) fd.append("subject", formData.subject);
-      if (formData.deliveryTarget) fd.append("deliveryTarget", formData.deliveryTarget);
+      if (formData.deliveryTarget)
+        fd.append("deliveryTarget", formData.deliveryTarget);
       fd.append("items", JSON.stringify(formData.items));
       fd.append("expectedRevenue", String(formData.expectedRevenue || 0));
       fd.append("notes", formData.notes || "");
@@ -172,18 +184,23 @@ export function DashboardClient({ initialData, initialMetrics, tenant }: Dashboa
       const res = await fetch(url, { method, body: fd });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || (isEdit ? "Gagal memperbarui PO" : "Gagal membuat PO"));
+        throw new Error(
+          err.error || (isEdit ? "Gagal memperbarui PO" : "Gagal membuat PO"),
+        );
       }
 
       await refreshData();
       toastSuccess(
         isEdit ? "PO Berhasil Diperbarui" : "PO Baru Berhasil Dibuat",
-        `Data PO untuk ${formData.supplierName} telah disimpan.`
+        `Data PO untuk ${formData.supplierName} telah disimpan.`,
       );
     } catch (e: any) {
       console.error(e);
       await refreshData();
-      toastError("Gagal Menyimpan PO", e.message || "Periksa kembali input form Anda.");
+      toastError(
+        "Gagal Menyimpan PO",
+        e.message || "Periksa kembali input form Anda.",
+      );
     } finally {
       setLoading(false);
     }
@@ -210,12 +227,12 @@ export function DashboardClient({ initialData, initialMetrics, tenant }: Dashboa
           profit: newProfit,
           status: newStatus,
         };
-      })
+      }),
     );
 
     toastSuccess(
       "Kas Masuk Berhasil Dicatat",
-      `Pelunasan sebesar ${formatRupiah(amount)} berhasil dibukukan.`
+      `Pelunasan sebesar ${formatRupiah(amount)} berhasil dibukukan.`,
     );
 
     try {
@@ -227,7 +244,10 @@ export function DashboardClient({ initialData, initialMetrics, tenant }: Dashboa
       fd.append("notes", formData.notes || "");
       if (formData.proofFile) fd.append("proofFile", formData.proofFile);
 
-      const res = await fetch(`/api/po/${formData.poId}/cash-inflow`, { method: "POST", body: fd });
+      const res = await fetch(`/api/po/${formData.poId}/cash-inflow`, {
+        method: "POST",
+        body: fd,
+      });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error || "Gagal mencatat kas masuk");
@@ -237,7 +257,10 @@ export function DashboardClient({ initialData, initialMetrics, tenant }: Dashboa
     } catch (e: any) {
       console.error(e);
       await refreshData();
-      toastError("Gagal Mencatat Kas Masuk", e.message || "Periksa kembali data kas masuk.");
+      toastError(
+        "Gagal Mencatat Kas Masuk",
+        e.message || "Periksa kembali data kas masuk.",
+      );
     }
   };
 
@@ -259,7 +282,7 @@ export function DashboardClient({ initialData, initialMetrics, tenant }: Dashboa
 
     toastSuccess(
       `PO ${target.poNumber} Berhasil Dihapus`,
-      `Data PO untuk ${target.supplierName} telah dihapus.`
+      `Data PO untuk ${target.supplierName} telah dihapus.`,
     );
 
     try {
@@ -272,12 +295,15 @@ export function DashboardClient({ initialData, initialMetrics, tenant }: Dashboa
       fetch("/api/metrics")
         .then((r) => r.ok && r.json())
         .then((json) => json && setMetrics(json))
-        .catch(() => { });
+        .catch(() => {});
     } catch (e: any) {
       console.error(e);
       // Rollback on failure
       setData(previousData);
-      toastError("Gagal Menghapus PO", e.message || "Data transaksi dikembalikan.");
+      toastError(
+        "Gagal Menghapus PO",
+        e.message || "Data transaksi dikembalikan.",
+      );
     }
   };
 
@@ -310,22 +336,34 @@ export function DashboardClient({ initialData, initialMetrics, tenant }: Dashboa
     if (tenant) {
       try {
         localStorage.setItem("cached_tenant", JSON.stringify(tenant));
-      } catch { }
+      } catch {}
     }
   }, [tenant]);
 
   const handleRefresh = async () => {
     setLoading(true);
     await refreshData();
-    toastSuccess("Data Diperbarui", "Data transaksi dan ringkasan kas telah dimuat ulang.");
+    toastSuccess(
+      "Data Diperbarui",
+      "Data transaksi dan ringkasan kas telah dimuat ulang.",
+    );
   };
 
   const handleLogout = async () => {
     setLogoutLoading(true);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3500);
+
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
-    } catch { }
-    window.location.href = "/login";
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        signal: controller.signal,
+      });
+    } catch {
+    } finally {
+      clearTimeout(timeoutId);
+      window.location.href = "/login";
+    }
   };
 
   return (
@@ -407,7 +445,12 @@ export function DashboardClient({ initialData, initialMetrics, tenant }: Dashboa
           </Button>
 
           <Link href="/settings" prefetch={true}>
-            <Button variant="outline" size="sm" className="h-9 text-xs sm:text-sm border-slate-200" title="Pengaturan Kop Surat">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 text-xs sm:text-sm border-slate-200"
+              title="Pengaturan Kop Surat"
+            >
               <Settings className="h-3.5 w-3.5 mr-1" /> Pengaturan
             </Button>
           </Link>
@@ -526,41 +569,47 @@ export function DashboardClient({ initialData, initialMetrics, tenant }: Dashboa
             <button
               onClick={() => setStatusFilter("ALL")}
               title="Tampilkan seluruh transaksi PO"
-              className={`flex items-center justify-center px-1.5 sm:px-3 py-2 rounded-lg sm:rounded-full font-bold transition-all text-xs sm:text-sm text-center truncate ${statusFilter === "ALL"
+              className={`flex items-center justify-center px-1.5 sm:px-3 py-2 rounded-lg sm:rounded-full font-bold transition-all text-xs sm:text-sm text-center truncate ${
+                statusFilter === "ALL"
                   ? "bg-slate-900 text-white shadow-xs"
                   : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                }`}
+              }`}
             >
               Semua ({countAll})
             </button>
             <button
               onClick={() => setStatusFilter("OUTSTANDING")}
               title="Pending: Belum ada pembayaran masuk sama sekali (Kas = Rp 0)"
-              className={`flex items-center justify-center px-1.5 sm:px-3 py-2 rounded-lg sm:rounded-full font-bold transition-all text-xs sm:text-sm text-center truncate ${statusFilter === "OUTSTANDING"
+              className={`flex items-center justify-center px-1.5 sm:px-3 py-2 rounded-lg sm:rounded-full font-bold transition-all text-xs sm:text-sm text-center truncate ${
+                statusFilter === "OUTSTANDING"
                   ? "bg-amber-600 text-white shadow-xs"
                   : "bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200"
-                }`}
+              }`}
             >
               Pending ({countOutstanding})
             </button>
             <button
               onClick={() => setStatusFilter("PARTIAL")}
               title="Partial: Pembayaran sudah dicicil sebagian, belum lunas"
-              className={`flex items-center justify-center px-1.5 sm:px-3 py-2 rounded-lg sm:rounded-full font-bold transition-all text-xs sm:text-sm text-center truncate ${statusFilter === "PARTIAL"
+              className={`flex items-center justify-center px-1.5 sm:px-3 py-2 rounded-lg sm:rounded-full font-bold transition-all text-xs sm:text-sm text-center truncate ${
+                statusFilter === "PARTIAL"
                   ? "bg-orange-600 text-white shadow-xs"
                   : "bg-orange-50 text-orange-800 hover:bg-orange-100 border border-orange-200"
-                }`}
+              }`}
             >
               <span className="sm:hidden">Partial ({countPartial})</span>
-              <span className="hidden sm:inline">Partial / Cicil ({countPartial})</span>
+              <span className="hidden sm:inline">
+                Partial / Cicil ({countPartial})
+              </span>
             </button>
             <button
               onClick={() => setStatusFilter("CLOSED")}
               title="Lunas: Pembayaran telah diterima 100% penuh"
-              className={`flex items-center justify-center px-1.5 sm:px-3 py-2 rounded-lg sm:rounded-full font-bold transition-all text-xs sm:text-sm text-center truncate ${statusFilter === "CLOSED"
+              className={`flex items-center justify-center px-1.5 sm:px-3 py-2 rounded-lg sm:rounded-full font-bold transition-all text-xs sm:text-sm text-center truncate ${
+                statusFilter === "CLOSED"
                   ? "bg-emerald-600 text-white shadow-xs"
                   : "bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200"
-                }`}
+              }`}
             >
               Lunas ({countClosed})
             </button>
@@ -571,36 +620,69 @@ export function DashboardClient({ initialData, initialMetrics, tenant }: Dashboa
             <div className="flex items-center gap-2 text-slate-800 font-medium">
               {statusFilter === "ALL" && (
                 <>
-                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-slate-100 text-slate-800 text-xs font-bold">ℹ️</span>
-                  <span><strong>Semua Transaksi:</strong> Menampilkan seluruh data ({countAll} PO) baik yang belum bayar, dicicil, maupun sudah lunas.</span>
+                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-slate-100 text-slate-800 text-xs font-bold">
+                    ℹ️
+                  </span>
+                  <span>
+                    <strong>Semua Transaksi:</strong> Menampilkan seluruh data (
+                    {countAll} PO) baik yang belum bayar, dicicil, maupun sudah
+                    lunas.
+                  </span>
                 </>
               )}
               {statusFilter === "OUTSTANDING" && (
                 <>
-                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-100 text-amber-800 text-xs font-bold">⏳</span>
-                  <span><strong>Kriteria Pending (Belum Bayar):</strong> Modal PO sudah keluar tapi <strong>kas masuk masih Rp 0</strong> (belum ada setoran).</span>
+                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-100 text-amber-800 text-xs font-bold">
+                    ⏳
+                  </span>
+                  <span>
+                    <strong>Kriteria Pending (Belum Bayar):</strong> Modal PO
+                    sudah keluar tapi <strong>kas masuk masih Rp 0</strong>{" "}
+                    (belum ada setoran).
+                  </span>
                 </>
               )}
               {statusFilter === "PARTIAL" && (
                 <>
-                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-orange-100 text-orange-800 text-xs font-bold">🔄</span>
-                  <span><strong>Kriteria Partial (Dicicil):</strong> Pembeli <strong>sudah bayar sebagian</strong> tapi belum lunas (masih ada sisa piutang modal).</span>
+                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-orange-100 text-orange-800 text-xs font-bold">
+                    🔄
+                  </span>
+                  <span>
+                    <strong>Kriteria Partial (Dicicil):</strong> Pembeli{" "}
+                    <strong>sudah bayar sebagian</strong> tapi belum lunas
+                    (masih ada sisa piutang modal).
+                  </span>
                 </>
               )}
               {statusFilter === "CLOSED" && (
                 <>
-                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold">✅</span>
-                  <span><strong>Kriteria Lunas (Selesai):</strong> Pembayaran dari pembeli <strong>sudah masuk 100% penuh</strong> atau melebihi modal PO.</span>
+                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold">
+                    ✅
+                  </span>
+                  <span>
+                    <strong>Kriteria Lunas (Selesai):</strong> Pembayaran dari
+                    pembeli <strong>sudah masuk 100% penuh</strong> atau
+                    melebihi modal PO.
+                  </span>
                 </>
               )}
             </div>
 
             <div className="flex items-center gap-2.5 text-xs text-slate-500 font-semibold self-end sm:self-auto">
-              <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500"></span> Kas = 0</span>
+              <span className="inline-flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-amber-500"></span> Kas
+                = 0
+              </span>
               <span>•</span>
-              <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-orange-500"></span> Dicicil</span>
+              <span className="inline-flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-orange-500"></span>{" "}
+                Dicicil
+              </span>
               <span>•</span>
-              <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Lunas 100%</span>
+              <span className="inline-flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>{" "}
+                Lunas 100%
+              </span>
             </div>
           </div>
         </CardContent>
@@ -654,10 +736,7 @@ export function DashboardClient({ initialData, initialMetrics, tenant }: Dashboa
         onRefresh={refreshData}
       />
 
-      <PanduanDialog
-        open={panduanOpen}
-        onOpenChange={setPanduanOpen}
-      />
+      <PanduanDialog open={panduanOpen} onOpenChange={setPanduanOpen} />
 
       {/* Modern Confirm Delete Dialog for PO */}
       <ConfirmDialog
@@ -666,7 +745,11 @@ export function DashboardClient({ initialData, initialMetrics, tenant }: Dashboa
         title="Hapus Purchase Order?"
         description="Apakah Anda yakin ingin menghapus data Purchase Order ini dari sistem?"
         itemBadge={poToDelete?.poNumber}
-        itemDetail={poToDelete ? `${poToDelete.supplierName} • Total Modal: ${formatRupiah(poToDelete.totalCost)}` : undefined}
+        itemDetail={
+          poToDelete
+            ? `${poToDelete.supplierName} • Total Modal: ${formatRupiah(poToDelete.totalCost)}`
+            : undefined
+        }
         warningNote="Semua rincian barang dan riwayat catatan kas masuk yang terhubung dengan PO ini akan dihapus secara permanen."
         confirmLabel="Ya, Hapus PO"
         cancelLabel="Batal"
@@ -675,7 +758,10 @@ export function DashboardClient({ initialData, initialMetrics, tenant }: Dashboa
       />
 
       {/* Modern Mobile Bottom Navigation Bar (Visible only on mobile < md) */}
-      <nav aria-label="Menu Navigasi Mobile" className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] md:hidden safe-area-bottom">
+      <nav
+        aria-label="Menu Navigasi Mobile"
+        className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] md:hidden safe-area-bottom"
+      >
         <div className="flex items-center justify-around px-2 py-1 max-w-md mx-auto">
           {/* 1. Refresh (Menggantikan Beranda) */}
           <button
@@ -685,9 +771,13 @@ export function DashboardClient({ initialData, initialMetrics, tenant }: Dashboa
             title="Refresh & Muat Ulang Data Transaksi"
           >
             <div className="p-1 rounded-lg bg-slate-100 text-slate-800 group-hover:bg-slate-200 shadow-2xs">
-              <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+              <RefreshCw
+                className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
+              />
             </div>
-            <span className="text-xs font-bold tracking-tight text-slate-800 mt-0.5">Refresh</span>
+            <span className="text-xs font-bold tracking-tight text-slate-800 mt-0.5">
+              Refresh
+            </span>
           </button>
 
           {/* 2. Kas Masuk */}
@@ -696,7 +786,9 @@ export function DashboardClient({ initialData, initialMetrics, tenant }: Dashboa
             className="flex flex-col items-center justify-center flex-1 py-1 text-emerald-700 active:text-emerald-800 transition-colors"
           >
             <PlusCircle className="h-5 w-5 mb-0.5 stroke-[2.2]" />
-            <span className="text-xs font-bold tracking-tight text-emerald-700">+ Kas</span>
+            <span className="text-xs font-bold tracking-tight text-emerald-700">
+              + Kas
+            </span>
           </button>
 
           {/* 3. Center Prominent Action Button (FAB) for "+ Buat PO" */}
@@ -711,7 +803,9 @@ export function DashboardClient({ initialData, initialMetrics, tenant }: Dashboa
             >
               <Plus className="h-6 w-6 stroke-[2.5]" />
             </button>
-            <span className="text-xs font-black text-slate-900 mt-0.5">Buat PO</span>
+            <span className="text-xs font-black text-slate-900 mt-0.5">
+              Buat PO
+            </span>
           </div>
 
           {/* 4. Export Excel */}
@@ -720,7 +814,9 @@ export function DashboardClient({ initialData, initialMetrics, tenant }: Dashboa
             className="flex flex-col items-center justify-center flex-1 py-1 text-slate-700 active:text-slate-900 transition-colors"
           >
             <Download className="h-5 w-5 mb-0.5 stroke-[2.2]" />
-            <span className="text-xs font-bold tracking-tight text-slate-700">Export</span>
+            <span className="text-xs font-bold tracking-tight text-slate-700">
+              Export
+            </span>
           </button>
 
           {/* 5. Pengaturan */}
@@ -730,7 +826,9 @@ export function DashboardClient({ initialData, initialMetrics, tenant }: Dashboa
             className="flex flex-col items-center justify-center flex-1 py-1 text-slate-700 active:text-slate-900 transition-colors"
           >
             <Settings className="h-5 w-5 mb-0.5 stroke-[2.2]" />
-            <span className="text-xs font-bold tracking-tight text-slate-700">Pengaturan</span>
+            <span className="text-xs font-bold tracking-tight text-slate-700">
+              Pengaturan
+            </span>
           </Link>
         </div>
       </nav>
