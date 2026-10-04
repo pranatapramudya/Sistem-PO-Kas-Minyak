@@ -8,9 +8,21 @@ import { Plus, Trash2, ArrowLeft, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { createPOSchema, orderItemSchema, UNIT_OPTIONS, type CreatePOInput, type OrderItemInput } from "@/lib/validations";
+import {
+  createPOSchema,
+  orderItemSchema,
+  UNIT_OPTIONS,
+  type CreatePOInput,
+  type OrderItemInput,
+} from "@/lib/validations";
 import { formatRupiah } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/modern-toast";
@@ -32,7 +44,10 @@ export default function NewPOPage() {
     },
   });
 
-  const { fields, append, remove } = useFieldArray({ control: form.control, name: "items" });
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "items",
+  });
 
   const handleSubmit = async (data: CreatePOInput) => {
     setSubmitting(true);
@@ -40,6 +55,8 @@ export default function NewPOPage() {
       const fd = new FormData();
       fd.append("date", data.date);
       fd.append("supplierName", data.supplierName);
+      if (data.subject) fd.append("subject", data.subject);
+      if (data.deliveryTarget) fd.append("deliveryTarget", data.deliveryTarget);
       fd.append("items", JSON.stringify(data.items));
       fd.append("expectedRevenue", String(data.expectedRevenue || 0));
       fd.append("notes", data.notes || "");
@@ -48,20 +65,32 @@ export default function NewPOPage() {
       const res = await fetch("/api/po", { method: "POST", body: fd });
       if (!res.ok) throw new Error("Gagal membuat PO");
 
-      toastSuccess("PO Berhasil Dibuat", "Data PO baru telah berhasil disimpan ke sistem.");
+      toastSuccess(
+        "PO Berhasil Dibuat",
+        "Data PO baru telah berhasil disimpan ke sistem.",
+      );
       router.push("/");
       router.refresh();
     } catch (e) {
       console.error(e);
-      toastError("Gagal Menyimpan PO", "Terjadi kesalahan saat menyimpan data PO.");
+      toastError(
+        "Gagal Menyimpan PO",
+        "Terjadi kesalahan saat menyimpan data PO.",
+      );
     } finally {
       setSubmitting(false);
     }
   };
 
-  const calculateSubtotal = (qty: any, unitPrice: any) => (Number(qty) || 0) * (Number(unitPrice) || 0);
+  const calculateSubtotal = (qty: any, unitPrice: any) =>
+    (Number(qty) || 0) * (Number(unitPrice) || 0);
   const calculateTotal = () => {
-    return form.watch("items").reduce((sum, item) => sum + calculateSubtotal(item.qty, item.unitPrice), 0);
+    return form
+      .watch("items")
+      .reduce(
+        (sum, item) => sum + calculateSubtotal(item.qty, item.unitPrice),
+        0,
+      );
   };
 
   const total = calculateTotal();
@@ -75,7 +104,9 @@ export default function NewPOPage() {
         </Button>
         <div>
           <h1 className="text-2xl font-bold">Buat PO Baru</h1>
-          <p className="text-sm text-muted-foreground">Input Purchase Order ke Supplier/Distributor</p>
+          <p className="text-sm text-muted-foreground">
+            Input Purchase Order ke Supplier/Distributor
+          </p>
         </div>
       </div>
 
@@ -102,7 +133,9 @@ export default function NewPOPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="supplierName">Nama Supplier / Distributor *</Label>
+                <Label htmlFor="supplierName">
+                  Nama Supplier / Distributor *
+                </Label>
                 <Controller
                   name="supplierName"
                   control={form.control}
@@ -136,7 +169,9 @@ export default function NewPOPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="deliveryTarget">Tujuan Pengiriman (Opsional)</Label>
+                <Label htmlFor="deliveryTarget">
+                  Tujuan Pengiriman (Opsional)
+                </Label>
                 <Controller
                   name="deliveryTarget"
                   control={form.control}
@@ -158,7 +193,19 @@ export default function NewPOPage() {
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base">Daftar Item Barang</CardTitle>
-              <Button type="button" variant="outline" size="sm" onClick={() => append({ itemName: "", qty: 1, unit: "Jerigen", unitPrice: 0 })}>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  append({
+                    itemName: "",
+                    qty: 1,
+                    unit: "Jerigen",
+                    unitPrice: 0,
+                  })
+                }
+              >
                 <Plus className="h-4 w-4 mr-1" /> Tambah Item
               </Button>
             </div>
@@ -166,7 +213,10 @@ export default function NewPOPage() {
           <CardContent>
             <div className="space-y-3">
               {fields.map((field, index) => (
-                <div key={field.id} className="flex gap-2 items-end p-3 border rounded-lg bg-muted/30">
+                <div
+                  key={field.id}
+                  className="flex gap-2 items-end p-3 border rounded-lg bg-muted/30"
+                >
                   <div className="flex-1 min-w-0 space-y-1.5">
                     <Label>Nama Barang *</Label>
                     <Controller
@@ -191,7 +241,13 @@ export default function NewPOPage() {
                           type="text"
                           inputMode="decimal"
                           placeholder="1"
-                          value={field.value === 0 || field.value === undefined || field.value === null ? "" : field.value}
+                          value={
+                            field.value === 0 ||
+                            field.value === undefined ||
+                            field.value === null
+                              ? ""
+                              : field.value
+                          }
                           onFocus={(e) => e.target.select()}
                           onChange={(e) => {
                             const val = e.target.value.replace(/,/g, ".");
@@ -213,13 +269,18 @@ export default function NewPOPage() {
                       name={`items.${index}.unit`}
                       control={form.control}
                       render={({ field }) => (
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
                           <SelectTrigger>
                             <SelectValue placeholder="Pilih" />
                           </SelectTrigger>
                           <SelectContent>
                             {UNIT_OPTIONS.map((u) => (
-                              <SelectItem key={u} value={u}>{u}</SelectItem>
+                              <SelectItem key={u} value={u}>
+                                {u}
+                              </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -236,7 +297,13 @@ export default function NewPOPage() {
                           type="text"
                           inputMode="numeric"
                           placeholder="0"
-                          value={field.value !== undefined && field.value !== null && field.value !== 0 ? Number(field.value).toLocaleString("id-ID") : ""}
+                          value={
+                            field.value !== undefined &&
+                            field.value !== null &&
+                            field.value !== 0
+                              ? Number(field.value).toLocaleString("id-ID")
+                              : ""
+                          }
                           onFocus={(e) => e.target.select()}
                           onChange={(e) => {
                             const raw = e.target.value.replace(/\D/g, "");
@@ -250,10 +317,12 @@ export default function NewPOPage() {
                     <Label>Subtotal</Label>
                     <Input
                       readOnly
-                      value={formatRupiah(calculateSubtotal(
-                        form.watch(`items.${index}.qty`),
-                        form.watch(`items.${index}.unitPrice`)
-                      ))}
+                      value={formatRupiah(
+                        calculateSubtotal(
+                          form.watch(`items.${index}.qty`),
+                          form.watch(`items.${index}.unitPrice`),
+                        ),
+                      )}
                       className="bg-muted font-mono"
                     />
                   </div>
@@ -273,7 +342,9 @@ export default function NewPOPage() {
             <div className="mt-4 flex justify-end items-center gap-4">
               <div className="text-right">
                 <p className="text-sm text-muted-foreground">Total Modal PO</p>
-                <p className="text-2xl font-bold text-red-600 font-mono">{formatRupiah(total)}</p>
+                <p className="text-2xl font-bold text-red-600 font-mono">
+                  {formatRupiah(total)}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -286,7 +357,9 @@ export default function NewPOPage() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="expectedRevenue">Estimasi Harga Jual / Target Kas Masuk</Label>
+                <Label htmlFor="expectedRevenue">
+                  Estimasi Harga Jual / Target Kas Masuk
+                </Label>
                 <Controller
                   name="expectedRevenue"
                   control={form.control}
@@ -296,7 +369,13 @@ export default function NewPOPage() {
                       type="text"
                       inputMode="numeric"
                       placeholder="0"
-                      value={field.value !== undefined && field.value !== null && field.value !== 0 ? Number(field.value).toLocaleString("id-ID") : ""}
+                      value={
+                        field.value !== undefined &&
+                        field.value !== null &&
+                        field.value !== 0
+                          ? Number(field.value).toLocaleString("id-ID")
+                          : ""
+                      }
                       onFocus={(e) => e.target.select()}
                       onChange={(e) => {
                         const raw = e.target.value.replace(/\D/g, "");
@@ -314,7 +393,11 @@ export default function NewPOPage() {
                   onChange={(e) => setProofFile(e.target.files?.[0] || null)}
                   className="cursor-pointer"
                 />
-                {proofFile && <p className="text-xs text-green-600">{proofFile.name} ({Math.round(proofFile.size / 1024)} KB)</p>}
+                {proofFile && (
+                  <p className="text-xs text-green-600">
+                    {proofFile.name} ({Math.round(proofFile.size / 1024)} KB)
+                  </p>
+                )}
               </div>
             </div>
 

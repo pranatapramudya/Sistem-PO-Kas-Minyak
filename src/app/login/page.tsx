@@ -46,13 +46,8 @@ export default function LoginPage() {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [isShaking, setIsShaking] = useState(false);
 
-  // Load last used identifier from localStorage & prefetch dashboard
+  // Load last used identifier from localStorage
   useEffect(() => {
-    // Warm up the dashboard chunk for instant navigation
-    try {
-      router.prefetch("/");
-    } catch {}
-
     try {
       const saved = localStorage.getItem("last_identifier");
       if (saved) {
@@ -63,7 +58,7 @@ export default function LoginPage() {
     } catch {
       setIdentifier("admin");
     }
-  }, [router]);
+  }, []);
 
   const triggerShake = (errMsg: string) => {
     setError(errMsg);
@@ -138,8 +133,8 @@ export default function LoginPage() {
       } catch {}
 
       setLoadingStep("Membuka dashboard toko...");
-      router.push("/");
-      router.refresh();
+      // Native instant redirect bypasses Next.js RSC client cache conflict
+      window.location.replace("/");
     } catch (err: any) {
       clearTimeout(timeoutId);
       if (err.name === "AbortError") {
@@ -205,8 +200,7 @@ export default function LoginPage() {
 
       setLoadingStep("Membuka dashboard toko...");
       setSuccessMsg("Pendaftaran berhasil! Mengalihkan ke dashboard...");
-      router.push("/");
-      router.refresh();
+      window.location.replace("/");
     } catch (err: any) {
       clearTimeout(timeoutId);
       if (err.name === "AbortError") {

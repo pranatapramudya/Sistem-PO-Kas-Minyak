@@ -1,53 +1,60 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authenticateTenant, findTenantByIdentifier, createSessionToken, COOKIE_NAME, DEFAULT_TENANT_ID, hashPIN } from "@/lib/auth";
+import {
+  authenticateTenant,
+  findTenantByIdentifier,
+  createSessionToken,
+  COOKIE_NAME,
+  DEFAULT_TENANT_ID,
+  hashPIN,
+} from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
     const pin = typeof body.pin === "string" ? body.pin.trim() : "";
-    const identifier = typeof body.identifier === "string" ? body.identifier.trim() : "";
+    const identifier =
+      typeof body.identifier === "string" ? body.identifier.trim() : "";
     const rememberDays = body.remember ? 90 : 30;
 
     if (!pin) {
       return NextResponse.json({ error: "PIN wajib diisi" }, { status: 400 });
     }
 
-    let tenant: any = null;
     const targetId = identifier.trim() || "admin";
-    const existing = await findTenantByIdentifier(targetId);
+    const [inputHash, tenant] = await Promise.all([
+      hashPIN(pin),
+      prisma.tenant.findFirst({
+        where: {
+          OR: [
+            { identifier: { equals: targetId, mode: "insensitive" } },
+            { companyName: { equals: targetId, mode: "insensitive" } },
+            ...(targetId.toLowerCase() === "admin"
+              ? [{ id: DEFAULT_TENANT_ID }]
+              : []),
+          ],
+        },
+      }),
+    ]);
 
-    if (!existing) {
-      // If user typed admin or default, check fallback
-      if (targetId.toLowerCase() === "admin") {
-        const defaultTenant = await prisma.tenant.findUnique({ where: { id: DEFAULT_TENANT_ID } });
-        if (defaultTenant) {
-          const inputHash = await hashPIN(pin);
-          if (defaultTenant.pinHash === inputHash) {
-            tenant = defaultTenant;
-          }
-        }
-      }
+    if (!tenant) {
+      return NextResponse.json(
+        {
+          error: `Akun "${targetId}" belum terdaftar. Silakan klik tab "Daftar Baru" untuk membuat akun toko Anda.`,
+          notRegistered: true,
+        },
+        { status: 404 },
+      );
+    }
 
-      if (!tenant) {
-        return NextResponse.json(
-          {
-            error: `Akun "${targetId}" belum terdaftar. Silakan klik tab "Daftar Baru" untuk membuat akun toko Anda.`,
-            notRegistered: true,
-          },
-          { status: 404 }
-        );
-      }
-    } else {
-      const inputHash = await hashPIN(pin);
-      if (existing.pinHash === inputHash) {
-        tenant = existing;
-      } else {
-        return NextResponse.json(
-          { error: "PIN yang Anda masukkan salah. Silakan periksa 6 digit PIN akun Anda." },
-          { status: 401 }
-        );
-      }
+    if (tenant.pinHash !== inputHash) {
+      return NextResponse.json(
+        {
+          error:
+            "PIN yang Anda masukkan salah. Silakan periksa 6 digit PIN akun Anda.",
+        },
+        { status: 401 },
+      );
     }
 
     const token = await createSessionToken(tenant.id, rememberDays);
@@ -79,7 +86,7 @@ export async function POST(req: NextRequest) {
     console.error("Auth login error:", error);
     return NextResponse.json(
       { error: "Terjadi kesalahan pada server autentikasi" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
