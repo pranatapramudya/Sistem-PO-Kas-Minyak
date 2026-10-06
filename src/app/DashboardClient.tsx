@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { ExecutiveCard } from "@/components/dashboard/ExecutiveCards";
 import {
@@ -120,9 +121,12 @@ export function DashboardClient({
       };
     }, [data]);
 
+  const router = useRouter();
+
   const refreshData = useCallback(async () => {
     setLoading(true);
     try {
+      router.refresh();
       const [res, metricsRes] = await Promise.all([
         fetch("/api/po"),
         fetch("/api/metrics"),
@@ -140,7 +144,7 @@ export function DashboardClient({
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [router]);
 
   const handleEditPO = async (po: POTableData) => {
     try {
